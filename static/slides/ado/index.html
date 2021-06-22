@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Adaptive Design Optimization</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Jonathan Trattner" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view/tile-view.js"></script>
+    <link href="libs/animate.css/animate.xaringan.css" rel="stylesheet" />
+    <link href="libs/tachyons/tachyons.min.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra_fit-screen/fit-screen.js"></script>
+    <script type="application/json" id="xaringanExtra-editable-docid">{"id":"x80b891f69dd493db8521c6128bc2a62","expires":14}</script>
+    <script src="libs/himalaya/himalaya.js"></script>
+    <script src="libs/js-cookie/js.cookie.js"></script>
+    <link href="libs/editable/editable.css" rel="stylesheet" />
+    <script src="libs/editable/editable.js"></script>
+    <script src="libs/xaringanExtra-webcam/webcam.js"></script>
+    <script id="xaringanExtra-webcam-options" type="application/json">{"width":"200","height":"200","margin":"1em"}</script>
+    <script src="libs/clipboard/clipboard.min.js"></script>
+    <link href="libs/shareon/shareon.min.css" rel="stylesheet" />
+    <script src="libs/shareon/shareon.min.js"></script>
+    <link href="libs/xaringanExtra-shareagain/shareagain.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-shareagain/shareagain.js"></script>
+    <script src="libs/mark.js/mark.min.js"></script>
+    <link href="libs/xaringanExtra-search/search.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-search/search.js"></script>
+    <script>window.addEventListener('load', function() { window.xeSearch = new RemarkSearch({"position":"bottom-left","caseSensitive":false,"showIcon":false,"autoSearch":true}) })</script>
+    <script src="libs/fabric/fabric.min.js"></script>
+    <link href="libs/xaringanExtra-scribble/scribble.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-scribble/scribble.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', function() { window.xeScribble = new Scribble({"pen_color":["#FF0000"],"pen_size":3,"eraser_size":30}) })</script>
+    <meta name="description" content="A presentation for STA379 at Wake Forest University on Bayesian Adaptive Design Optimization (ADO). The presentation begins with a brief introduction to neuroscience and behavioral tasks before covering ADO with a focus on material from Ahn, Gu, Shen, and colleagues (2020). https://doi.org/10.1038/s41598-020-68587-x"/>
+    <meta name="generator" content="xaringan and remark.js"/>
+    <meta name="twitter:title" content="Adaptive Design Optimization"/>
+    <meta name="twitter:description" content="A presentation for STA379 at Wake Forest University on Bayesian Adaptive Design Optimization (ADO). The presentation begins with a brief introduction to neuroscience and behavioral tasks before covering ADO with a focus on material from Ahn, Gu, Shen, and colleagues (2020). https://doi.org/10.1038/s41598-020-68587-x"/>
+    <meta name="twitter:url" content="https://jdtrat.com/talks/ado/slides.html"/>
+    <meta name="twitter:image:src" content="https://jdtrat.com/talks/ado/cover.png"/>
+    <meta name="twitter:image:alt" content="The title slide for the Adaptive Design Optimization. It&#39;s a navy blue background with the title in gold text. Underneath, the author&#39;s name, Jonathan Trattner, and the date originally presented, 3-26-2021, is in white text."/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:creator" content="@jdtrat"/>
+    <meta name="twitter:site" content="@jdtrat"/>
+    <meta property="og:title" content="Adaptive Design Optimization"/>
+    <meta property="og:description" content="A presentation for STA379 at Wake Forest University on Bayesian Adaptive Design Optimization (ADO). The presentation begins with a brief introduction to neuroscience and behavioral tasks before covering ADO with a focus on material from Ahn, Gu, Shen, and colleagues (2020). https://doi.org/10.1038/s41598-020-68587-x"/>
+    <meta property="og:url" content="https://jdtrat.com/talks/ado/slides.html"/>
+    <meta property="og:image" content="https://jdtrat.com/talks/ado/cover.png"/>
+    <meta property="og:image:alt" content="The title slide for the Adaptive Design Optimization. It&#39;s a navy blue background with the title in gold text. Underneath, the author&#39;s name, Jonathan Trattner, and the date originally presented, 3-26-2021, is in white text."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta property="article:author" content="Jonathan David Trattner"/>
+    <link rel="stylesheet" href="jdtrat.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+class: inverse center middle
+
+# Adaptive Design Optimization
+
+.large[Jonathan Trattner | 3-26-2021]
+
+
+
+
+
+
+---
+class: inverse center middle
+
+# Introduction 👋
+
+???
+  
+Hi! I'm Jonathan. I'm a computational neuroscience major at Wake. I conduct research with Ken Kishida at the medical school and I thought I'd cover a topic that I've discussed with him in the past about making more efficient behavioral measurements. So, without further ado, let's get a crash course in neuroscience.
+
+---
+name: theme
+layout: true
+.my-header[
+]
+
+.my-footer[
+]
+
+---
+class: top center
+.my-header[
+.title[
+Crash Course in 🧠 
+]
+]
+
+--
+
+.absolute.top-1.left-2.mt6.ml2.bg-lightest-blue.purple.b--blue.ba.bw1.br3.pl3.pr3.shadow-3.w-50.fw5.tl[
+The fundamental unit of the nervous system, including your brain, are cells called neurons. 
+]
+
+--
+
+.absolute.bottom-1.mb6.ml2.left-2.bg-lightest-blue.purple.b--blue.ba.bw1.br3.pl3.pr3.shadow-3.w-50.fw5.tl[
+Neurons have three main components:
+
+1️⃣ .b[Axons] send information
+
+
+2️⃣ .b[Dendrites] receive information
+
+
+3️⃣ .b[Cell body]
+]
+
+--
+
+.absolute.right-2.top-2.mt6.mr4.w-30[
+.b--blue.bw1.ba.br3[
+![:scale 80%](purves-1.2-neuron.png)
+]
+.f7.tl[
+.b[Retinal bipolar cell]. Figure 1.2b from [Neuroscience, 5th Edition by Purves &amp; Colleagues](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3584490/).
+]
+]
+
+---
+class: center
+.my-header[
+.title[
+Crash Course in 🧠 
+]
+]
+
+
+.relative.mt6.top-2.bg-lightest-blue.purple.b--blue.ba.bw1.br3.pl3.pr3.shadow-5[
+Neurons can be grouped into neural circuits and neural systems.
+]
+
+--
+
+.relative.mt5.flex.justify-between[
+.bg-lightest-blue.purple.b--blue.ba.bw1.br3.pa3.shadow-5.mt4.w-50[
+
+.f3.fw6[Sensory Systems]
+
+.f1[👁 👄 👂]
+]
+.bg-lightest-blue.purple.b--blue.ba.bw1.br3.pa3.shadow-5.mt4.ml2.w-50[
+
+.f3.fw6[Motor Systems]
+
+.f1[💪]
+
+]
+]
+
+???
+Neurons can be grouped into neural circuits and neural systems. For example, there are sensory systems which represent information about the state of the organism and its environment and are motor systems which organize and generate actions.
+
+---
+class: center
+.my-header[
+.title[
+Crash Course in 🧠 
+]
+]
+
+.relative.top--1.mt6.bg-light-green.pv2.ph3.b--blue.black.bw1.ba.br3.shadow-4.w-60.center[
+Neurons commuicate with chemical messengers called *neurotransmitters*.
+]
+
+--
+
+.relative.mt3.flex.ml5[
+.bg-light-blue.pv2.ph3.b--blue.black.bw1.ba.br3.shadow-4.mr4.ml6[
+Dopamine
+]
+.bg-light-red.pv2.ph3.b--blue.black.bw1.ba.br3.shadow-4.w-35.ml3[
+Serotonin
+]
+]
+
+--
+
+.mt4.bg-near-white.pv2.ph3.b--blue.black.bw1.ba.br3.shadow-5.w-75.center[
+One goal of neuroscience is to test causal claims linking physiological processes such as neurotransmitter release to observable behaviors.
+]
+
+???
+
+This leads the question of how do neurons communicate with one another? Through chemical messengers known as neurotransmitters. Dopamine and Serotonin are two prominent examples.
+
+These behaviors of interest may be "simple" motor actions such as moving your hand or more complex actions like choosing to eat a salmon roll over a tuna roll.
+
+
+---
+
+class: center
+.my-header[
+.title[
+Crash Course in 🧠 
+]
+]
+
+.relative.top--2.mt6.shadow-5.center.bg-washed-green.dark-gray.bl.br.bw2.b--green.pv2.pw3.br3[
+One method to test causality is to activate specific groups of neurons.
+]
+
+--
+
+.relative.mt2.ba.bw1.b--black.br3.w-80.center.pa2[
+![](optogenetics-diagram.jpg)
+]
+.f6.tl.ml5.pl3.top--1.relative.pt2.w-80[
+.b[A]: All cells close to stimulation site are activated. .b[B]: Blue light normally does not affect neurons. .b[C]: Blue light selectively activates neurons with the protein ChR2. Figure 1 [(Lim &amp; LeDue, 2017)](https://kids.frontiersin.org/article/10.3389/frym.2017.00051). 
+]
+
+???
+
+Without going into too much detail, I want to highlight one novel way to activate specific neurons -- optogenetics! Eessentially, researchers took algal proteins called rhodopsins, genetically inserted them into specific populations of neurons, and selectively activated them with light (https://doi.org/10.1038/nn1525).
+
+---
+class: center
+.my-header[
+.title[
+Need for Behavioral Studies
+]
+]
+
+.relative.top--1.mt7.bg-light-pink.br3.bw2.bl.bt.pv2.ph3.b--hot-pink.shadow-5.black.tc[
+Techniques like optogenetics allow us to discover a lot about specific biological processes, but without a framework within which to understand elicited behaviors, these results have limited efficacy.
+]
+
+---
+class: center
+.my-header[
+.title[
+Need for Behavioral Studies
+]
+]
+
+.fw6.relative.top--2.mt6.bg-washed-red.br3.bw1.ba.b--hot-pink.shadow-5.black.f3.w-50.center[
+Parkinson's Disease
+]
+
+???
+
+Now I know I didn't go into too much detail about how optogenetics works, but I think it is SUPER cool and I hope you do, too! Techniques like that allow us to discover a lot of new information, but without a framework within which to understand elicited behaviors, these results have limited efficacy.
+
+--
+
+.tl.bg-washed-red.shadow-5.br3.pa3.mt4.black.b--hot-pink.bl.bt.bw1[
+
+🔹 Symptoms develop when dopamine-producing cells in the substantia nigra die. 
+
+
+🔹 Affected individuals have low levels of dopamine.
+
+🔹 Behavioral changes such as bradykinesia and alterations in impulsivity and motivation.
+]
+
+---
+class: center
+.my-header[
+.title[
+Need for Behavioral Studies
+]
+]
+
+.mt6.bg-light-yellow.b--gray.ba.bw1.br3.shadow-5.ph3.pv1.black[
+Simply *knowing* the mechanism for Parkinson's disease does not help us understand how exactly dopamine depletion leads to behaviors such as bradykinesia or impulsivity.
+]
+
+???
+
+Simply knowing the mechanism for Parkinson's disease doesn't always help us understand how X leads to Y, though. Behavioral studies, on the other hand, can help provide a framework for this. These two studies, for example, employed paradigms that are designed to elicit information about specific behaviors.
+
+--
+
+.mt4.flex.tl[
+
+.flex-column[
+.bg-washed-yellow.b--gray.ba.bw1.br3.shadow-5.ph3.pv1.mr3[
+🔸 Parkinsonian patients have a skewed cost-benefit for expending energy when moving, which may explain bradykinesia.
+]
+.f6.relative.top--1.pt2.left-1[
+[Mazzoni, Hristova, and Krakauer (2007)](https://www.jneurosci.org/content/27/27/7105)
+]
+]
+
+.flex-column[
+.bg-washed-yellow.b--gray.ba.bw1.br3.shadow-5.ph3.pv1[
+🔸 Lower dopamine levels in cortical areas involved in decision-making are associated with higher levels of impulsivity.
+]
+.f6.relative.top--1.pt2.left-1[
+[Kayser, Allen, and Colleagues (2012)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6622221/)]
+
+]
+]
+
+???
+
+The papers are linked in the slides, and I'm not going to spend too much time going through them, but the first one provided evidence that Parkinsonian patients have a skewed cost-benefit analysis for expending energy when moving, which implicates dopamine's role in "motor motivation". Similarly, the task on the right found that lower dopamine levels in cortical areas involved in decision-making are associated with higher levels of impulsivity, which makes sense when considering top-down cognitive processes.
+
+---
+.my-header[
+.title[
+Task Design
+]
+]
+
+???
+With the relevance and use for behavioral tasks established, I want to transition to see how they are implemented. In general, researchers attempt to measure three things with behavioral tasks:
+
+--
+
+.mv6.shadow-5.center.bg-washed-green.dark-gray.bl.bw2.b--green.pa2.br3[
+How are behavioral experiments used?
+]
+
+--
+
+.absolute.mt7.top-0.mb6[Researchers consider three aspects of a behavioral task:
+]
+
+--
+
+.relative.flex.justify-between.top--2[
+
+.mr2.column.w-30.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+
+.center[1️⃣ .b[Reliability]]
+
+.f4[Reliable measurements of biological processes such as impulsivity are difficult.]
+]
+
+.mr2.column.w-30.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+.center[2️⃣ .b[Precision]]
+
+.f4[Precision of measurements have not been developed for many neurocognitive tests.]
+]
+
+.mr2.column.w-30.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+.center[3️⃣ .b[Efficiency]]
+
+.f4[Cognitive tasks are not very efficient. Participants may be easily fatigued or distracted.]
+
+]
+]
+
+???
+
+- reliability
+    - Reliable measurement of latent psychological or biological processes such as impulsivity is difficult. A recent large-scale study suggests that test-retest reliabilities of these tasks are only modest (ref: 19).
+- precision
+    - Reliable measurements is in part dependent upon the precision of measurements made. Standards have not been developed for many neurocognitive tests, and thus their precision is relatively unknown.
+- efficiency
+    - Cognitive tasks are not very efficient.
+    - Often take &gt; 20 minutes to administer
+        - I have frequently performed tasks that are an hour or more
+        with lengthy and demanding tasks, participants (especially clinical populations) can easily be fatigued or distracted, which can increase measurement error.
+
+
+---
+class: inverse middle center
+
+# Delay-Discounting Task
+
+???
+With our crash-course in neuroscience complete, and our understanding of why behavioral experiments are conducted and what the goals of them are, I want to focus on how we can improve them. I'm going to use a delay-discounting task as an example from the paper by Ahn and Colleagues. 
+---
+.my-header[
+.title[
+Delay-Discounting Example
+]
+]
+
+--
+
+.mt6.flex.justify-between[
+
+.flex-column.w-40.center[
+.o-60.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #1]
+]
+
+.flex-column.w-40.center[
+.o-60.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #2]
+]
+
+]
+
+???
+What is the delay-discounting task? Well, as an example, let's say you have two doors.
+
+---
+.my-header[
+.title[
+Delay-Discounting Example
+]
+]
+
+.mt6.flex.justify-between[
+
+.flex-column.w-40.center[
+.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #1]
+
+.relative.top-1.bg-gold.pa3.br3.shadow-4[$100 now]
+
+]
+
+.flex-column.w-40.center[
+.o-60.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #2]
+]
+
+]
+
+???
+
+If you choose door #1, you'll get $100 now.
+
+---
+.my-header[
+.title[
+Delay-Discounting Example
+]
+]
+
+.mt6.flex.justify-between[
+
+.flex-column.w-40.center[
+.o-60.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #1]
+
+.o-60.relative.top-1.bg-gold.pa3.br3.shadow-4[$100 now]
+
+]
+
+.flex-column.w-40.center[
+.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #2]
+
+.relative.top-1.bg-gold.pa3.br3.shadow-4[$400 in one year]
+
+]
+
+]
+
+???
+The question becomes what do you choose?
+
+---
+.my-header[
+.title[
+Delay-Discounting Example
+]
+]
+
+.mt6.flex.justify-between[
+
+.flex-column.w-40.center[
+.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #1]
+
+.relative.top-1.bg-gold.pa3.br3.shadow-4[$100 now]
+
+]
+
+.flex-column.w-40.center[
+.extra-large-emoji[🚪]
+
+.b.relative.top--1[Door #2]
+
+.relative.top-1.bg-gold.pa3.br3.shadow-4[$400 in one year]
+
+]
+
+]
+--
+
+.relative.center.top-1.mt4.bg-light-yellow.b--yellow.ba.bw1.br3.w-50.shadow-4[
+What do you choose❓
+]
+
+---
+.my-header[
+.title[
+Assessing Delay-Discounting
+]
+]
+
+.mt6.fw5.bl.b--mid-gray.ph3.dark-gray[
+Traditional methods to assess delay discounting include self-reported questionnaires and computer-based tasks.
+]
+
+--
+
+.relative.top-2.fw5.bl.b--mid-gray.ph3.dark-gray.ml4[
+These paradigms employ heuristic rules to inform stimulus selection.
+]
+
+--
+
+.relative.top-1.mt5.fw5.bl.b--mid-gray.ph3.dark-gray.ml5[
+Though heuristics can improve experiment efficiency, they often lack a theoretical or quantitative justification.
+]
+
+--
+
+.center.relative.top-2.mt3.fw5.b--light-purple.black.ba.bw1.ph3.bg-light-blue.ml7.pv2.w-40.br4.shadow-5[
+👋 Bayesian Statistics
+]
+
+???
+
+The authors describe traditional methods to assess delay discounting such as self-reported questionnaires and computer-based tasks. Such paradigms often use a heuristic rule to inform stimulus selection where subsequent trials are adjusted based on current/previous answers using a predefined rule-of-thumb.
+
+The authors state that, although the use of heuristic rules to inform stimulus selection can be an effective initial approach to improve experiment efficiency, they often lack a theoretical or quantitative framework that can justify those rules. This is where our good friend Bayes comes in.
+
+---
+.my-header[
+.title[
+Hello, Bayes
+]
+]
+
+.mt6.bg-dark-blue.pa3.br3.bl.bw3.b--blue.light-gray.fw4.measure[
+Bayesian adaptive testing is a promising machine-learning method that can improve the efficiency, precision, and reliability of computer-based tasks.
+]
+
+--
+
+.relative.top--1.mt5.bg-light-blue.pa2.ph3.br3.bl.bw3.b--blue.dark-gray.fw4.measure[
+Bayesian adaptive testing is implemented with .b[adaptive design optimization (ADO)], a general-purpose algorithm for conducting experiments whose objective can be achieved with the fewest number of observations.
+]
+
+
+---
+.my-header[
+.title[
+Without further ADO
+]
+]
+
+.top-2.mt6.f2.mid-gray[
+Broadly, ADO consists of two repeating steps.
+]
+
+--
+
+.mt4.bg-light-green.ph3.pv2.br3.bb.bt.bw1.b--light-blue.shadow-4.mid-gray[
+1️⃣ In ADO, experimental designs are updated after every .b[stage], where the .b[most informative design] is chosen for the next stage. 
+]
+
+--
+
+.mt4.bg-light-green.ph3.pv2.br3.bb.bt.bw1.b--light-blue.shadow-4.mid-gray[
+2️⃣ Data is collected in the next stage, analyzed, and a new design is determined for subsequent stages.
+]
+
+???
+
+In ADO, the optimal experimental design is updated at intervals known as stages (Myung 2014). They can be as frequent as every trial or not... Regardless, at the end of each stage, the most informative design for the next stage (i.e., the design with the highest expected utility) is sought based on the design and outcomes of the previous stage. This new stage is then carried out with that design, and the resulting data are analyzed and modeled. This is followed by identifying a new design to be used in the next stage. This iterative process continues until an appropriate stopping criterion are reached.
+
+---
+.my-header[
+.title[
+Without further ADO
+]
+]
+
+
+
+.top-1.mt6.f2.mid-gray[
+More mathemagically,
+]
+
+
+.inset[
+
+$$
+U(d) = \int \int u(d, \theta, y) \ p(y| \theta, d) \ p(\theta) \ dy \ d \theta
+$$
+]
+
+--
+
+.relative.mt4.f4[
+* `\(p(\theta)\)` is the prior
+* `\(p(y|\theta,d)\)` is the likelihood
+* `\(u(d, \theta, y)\)` is the local utility
+* `\(U(d)\)` is a global utility function of design `\(d\)`
+]
+
+--
+
+.absolute.bottom-2.mb6.w-80.bg-near-white.pa3.pb4.pl3.pr0.br3.bl.bw3.b--dark-gray.dark-gray.fw4.shadow-4[
+The optimal design `\(d^*\)` maximally reduces the uncertainty about the parameters of interest
+]
+
+???
+
+More specifically, we have some global utility function `\(U(d)\)`, a function of design `\(d\)`, that represents the mean of the local utility `\(u(d, \theta, y)\)` for all possible outcomes and parameter values weighted by the likelihood `\(p(y|\theta,d)\)` and the prior `\(p(\theta)\)`.
+
+The optimal design is defined as the one that is maximally informative about the unknown parameter `\(\theta\)`.
+
+
+---
+.my-header[
+.title[
+Without further ADO
+]
+]
+
+
+.relative.top-1.mt5.w-60.center.bg-washed-red.pa2.ph3.br3.bl.bw3.b--red.dark-gray.fw4.shadow-4[
+How do we implement this ❓
+]
+
+--
+
+.br3.ba.b--navy.relative.mt4.center.bw1.w-80.shadow-4[
+![](ado-diagram.png)
+]
+.relative.left-1.ml5.mt3.top--2.f6.w-80.pt2[
+.b[The three iterative steps of Adaptive Design Optimization.] Figure 1 from [Yang, Pitt, Ahn, and Myung (2020)](https://doi.org/10.3758/s13428-020-01386-4).
+]
+
+???
+
+So the question is how do we implement this? Well, if we define an experimental stage as a "trial", then each trial is conducted with the current optimal design `\(d^*\)`. A participant's response, `\(y_{obs}\)`, is observed and the prior distribution is updated via Bayes rule where the new observation is used to obtain the posterior distribution `\(p(\theta|y_{obs}\)` which becomes the new prior for the next stage.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.relative.top--1.mt7.bg-light-gray.ba.bw1.br3.b--mid-gray.pv1.ph3.shadow-5[
+Participants completed two sessions one-month apart. Both sessions consisted of two ADO-based and two staircase (SC) tasks, each of which included 42 trials.
+]
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after .b[X] delay.
+]]]
+
+]
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after .b[X] delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+]
+
+???
+Where X delay was either 1 week, 2 weeks, 1 month, 6 months, 1 year, 3 years, or 10 years.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$400 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+???
+
+As an example, let's say X is one year. On your first trial, you must choose between \$400 now or \$800 in one year. Let's say you select the immediate option, \$400 now. The next trial becomes a choie between \$200 now or \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$400 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+???
+The next trial becomes a choie between \$200 now or \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$200 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+???
+If you choose the immediate option again, then the next trial would be between \$100 and \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$200 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+???
+If you choose the immediate option again, then the next trial would be between \$100 and \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$100 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+???
+If you choose the delayed option now, then the next trial would be between \$150 now and \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$100 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+???
+If you choose the delayed option now, then the next trial would be between \$150 now and \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+Staircase
+
+.column[
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Initial choice of &amp;#36;400 now or &amp;#36;800 after X delay.
+]
+]
+
+.f5.mt3.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Immediate amount updates after each choice in 50% increments of the preceding amount.
+]
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #1]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$150 now]
+
+]
+
+.flex-column.w-20.center.relative.top-0.mt6.pt5[
+.o-60.extra-large-emoji[🚪]
+
+.f5.b.relative.top--2[Door #2]
+
+.f5.relative.top--2.bg-gold.pa3.br3.shadow-4[$800 in one year]
+
+]
+
+]
+
+--
+
+.relative.f5.mt2.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5.center[
+.f4[🛑] This adjusting procedure ends when the choices were made for  &amp;#36;25 and &amp;#36;12.5 increments. .f4[🛑]
+]
+
+???
+If you choose the delayed option now, then the next trial would be between \$150 now and \$800 in one year.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+--
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+ADO
+
+.column[
+.f5.mt3.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Sooner delay was fixed at day 0.
+Later-larger reward was fixed at &amp;#36;800.
+]
+]
+]
+]
+
+???
+
+In a diagram more specific to the delayed-discounting task, the iterative process of ADO may be describedas such:
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.flex[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+ADO
+
+.column[
+.f5.mt3.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Sooner delay was fixed at day 0.
+Later-larger reward was fixed at &amp;#36;800.
+]
+]
+
+.f5.mt3.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+The later delay and sooner reward were the experimental parameters that were optimized on each trial.
+]
+]
+]
+
+???
+
+In a diagram more specific to the delayed-discounting task, the iterative process of ADO may be described as such:
+
+---
+
+.flex.justify-between[
+.relative.top--1.mt6.dark-blue.f2.mr6.w-40[
+ADO
+
+.column[
+.f5.mt3.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Sooner delay was fixed at day 0.
+Later-larger reward was fixed at &amp;#36;800.
+]
+]
+
+.f5.mt3.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+The later delay and sooner reward were the experimental parameters that were optimized on each trial.
+]
+]
+
+.flex-column.relative.w-40.top--2.mt7[
+.ba.bw1.br3.pa0.b--dark-blue[
+![](delay-discounting-ado.jpeg)
+]
+]
+]
+
+???
+
+In a diagram more specific to the delayed-discounting task, the iterative process of ADO may be described as such. 
+
+It's a little hard to see, so let's zoom in a little bit.
+---
+class: animated zoomInRight
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.relative.top--1.ba.bw1.br3.b--dark-blue.mt6[
+![](delay-discounting-ado.jpeg)
+
+]
+.f5.relative.top--2.ml2.pt1[
+.b[Illustration of adaptive design optimization (ADO) for delay discounting.] Figure 1 in [Ahn et al. (2020)](https://www.nature.com/articles/s41598-020-68587-x).
+]
+
+???
+
+So, in our example, the observed data is a binary variable. 0 and the participant chose the smaller, sooner reward. 1 and they chose larger, later reward. `\(\theta\)` is the discounting rate, `\(k\)`, and inverse temperature, `\(\beta\)`, in the hyperbolic function that describes delay-discounting. 
+
+The optimal design, `\(d^*\)` is the experimental design (a later delay and sooner reward, as underlined in the figure), that maximized the local utility function `\(u(d, \theta, y)\)`.
+
+---
+.my-header[
+.title[
+Delay-Discounting &amp; ADO
+]
+]
+
+.relative.top--1.ba.bw1.br3.b--dark-blue.mt6[
+![](delay-discounting-ado.jpeg)
+
+]
+.f5.relative.top--2.ml2.pt1[
+.b[Illustration of adaptive design optimization (ADO) for delay discounting.] Figure 1 in [Ahn et al. (2020)](https://www.nature.com/articles/s41598-020-68587-x).
+]
+
+???
+
+So, in our example, the observed data is a binary variable. 0 and the participant chose the smaller, sooner reward. 1 and they chose larger, later reward. `\(\theta\)` is the discounting rate, `\(k\)`, and inverse temperature, `\(\beta\)`, in the hyperbolic function that describes delay-discounting. 
+
+The optimal design, `\(d^*\)` is the experimental design (a later delay and sooner reward, as underlined in the figure), that maximized the local utility function `\(u(d, \theta, y)\)`.
+
+---
+.my-header[
+.title[Delay-Discounting &amp; ADO
+]
+]
+
+.relative.center.mt6.top--2.dark-blue[
+.pt0.f3.left.fw6.mb2[Softmax Choice Rule:]
+
+.relative.top--1.mt4.f3.bw1.bb.bl.br3.shadow-4.pt1.ph2.center.w-80[
+`\(\underbrace{P(LL \text{ over } SS)}_{\text{Choice probability}} = \frac{1}{1 + e^{\beta(V_{SS(t)} - V_{LL(t)})}}\)`
+.f6.tl[
+Probability larger, later reward is chosen on trial `\(t\)` with temperature `\(\beta\)` given the subjective values for each reward, `\(V\)`. 
+]
+]
+]
+
+???
+On the last side, I mentioned the hyperbolic function that describes delay-discounting. The way this was implemented is by estimating the probability that an individual chooses a larger-later reward over a smaller, sooner reward is described by the softmax choice rule. 
+
+
+---
+.my-header[
+.title[Delay-Discounting &amp; ADO
+]
+]
+
+.relative.center.mt6.top--2.dark-blue[
+.pt0.f3.left.fw6.mb2[Softmax Choice Rule:]
+
+.relative.top--1.mt4.f3.bw1.bb.bl.br3.shadow-4.pt1.ph2.center.w-80[
+`\(\underbrace{P(LL \text{ over } SS)}_{\text{Choice probability}} = \frac{1}{1 + e^{\beta(V_{SS(t)} - V_{LL(t)})}}\)`
+.f6.tl[
+Probability larger, later reward is chosen on trial `\(t\)` with temperature `\(\beta\)` given the subjective values for each reward, `\(V\)`. 
+]
+]
+
+.relative.top--2.pt3.f3.left.fw6[Hyperbolic function:]
+
+.relative.top--2.mt2.f3.bw1.bb.bl.br3.shadow-4.pt1.ph2.center.w-50[
+`\(V = \frac{A}{1+kD}\)`
+
+.f6.tl[
+Hyperbolic function with objective reward `\(A\)`, discount rate `\(k\)`, and delay `\(D\)`.
+]
+]
+]
+
+???
+On the last side, I mentioned the hyperbolic function that describes delay-discounting. The way this was implemented is by estimating the probability that an individual chooses a larger-later reward over a smaller, sooner reward is described by the softmax choice rule. 
+
+The subjective values of each reward are calculated using the hyperbolic function with discount rate k and delay D.
+
+
+---
+class: animated backOutUp
+.my-header[
+.title[ADO or not ADO?
+]
+]
+
+
+.relative.flex.justify-between.top--2.mt7.tc[
+
+.mr2.column.w-33.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+
+.center[1️⃣ .b[Reliability]]
+
+.f4[Assessed with the concordance correlation coefficient.]
+]
+
+.mr2.column.w-33.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+.center[2️⃣ .b[Precision]]
+
+.f4[Determined by the standard deviation of the parameters posterior distributions.]
+]
+
+.mr2.column.w-33.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+.center[3️⃣ .b[Efficiency]]
+
+.f4[Quantified as the number of trials to reach a test-retest reliability of 0.9.]
+
+]
+]
+
+???
+The concordance correlation coefficient, CCC, assesses the agreement between two sets of measurements collected at two points in time and is superior to the Pearson coefficient which only assesses association, not agreement.
+
+---
+.my-header[
+.title[
+ADO or not ADO?
+]
+]
+
+.relative.flex.justify-between.top--2.mt7.tc[
+
+.mr2.column.w-33.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+
+.center[1️⃣ .b[Reliability]]
+
+.f4[.b[ADO] captures approximately 7-11% more variance in test-retest reliability.]
+]
+
+.mr2.column.w-33.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+.center[2️⃣ .b[Precision]]
+
+.f4[.b[ADO] trials had 3-5 times smaller standard deviations for parameter estimates.]
+]
+
+.mr2.column.w-33.ph3.bg-washed-green.dark-gray.b--green.ba.bw1.br3.ph3.pv0.shadow-5[
+.center[3️⃣ .b[Efficiency]]
+
+.f4[.b[ADO] required 3-8 times fewer trials to reach a 0.9 test-retest reliability]
+
+]
+]
+
+???
+I'm not going to go through all the results, and there are some nuances that I don't discuss, so I would encourage you to check out the original publication if you're interested. In short, though, ADO outperformed the SC method. 
+
+---
+.my-header[
+.title[ADO or not ADO?
+]
+]
+
+.relative.top-1.mt6.bw1.ba.br3.w-75.center.pt1[
+![:scale 95%](ado-delayed-discount-results.jpeg)
+]
+.relative.top-0.w-75.ml5.f5.pl4.pt1[
+.b[Comparison of ADO and SC within-visit test-retest reliability of temporal discounting rate.] Figure 2 in [Ahn et al. (2020)](https://www.nature.com/articles/s41598-020-68587-x).
+]
+
+
+???
+
+Just to include a graphic that may help illustrate how ADO performs better, consider this plot where we have the test-retest reliability on the y-axis and the trial number on the x-axis. ADO is the salmon-pink, and we can see that it clearly out performs SC. The shaded regions represent the 95% frequentist confidence interval of the concordance correlation coefficient. 
+
+---
+class: inverse middle center
+
+# Conclusion
+
+???
+Just to conclude a little bit, I want to summarize some of the benefits and limitations of ADO.
+
+---
+.my-header[
+.title[Just ADO it?
+]
+]
+
+.relative.top-0.mt7.bg-lightest-blue.ph3.pv1.b--dark-blue.br3.ba.bw1.tc[
+ADO led to highly reliable, precise, and rapid measurements of participants' discounting rate, outperforming the SC method.
+]
+
+???
+So in short, we saw that ADO led to highly reliable, precise, and rapid measurements of participants' discounting rate, significantly outperforming the SC method. I just wanted to close with some things to think about when implementing this.
+
+---
+.my-header[
+.title[Just ADO it?
+]
+]
+
+.flex.relative.top--2.mt6.dark-blue.f2[
+
+.flex-column.mr5.w-50[
+.b[ADO]
+.relative.f4.top--1.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Controls for individual differences
+]
+.relative.f4.top-0.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Intelligent data collection speeds up experiments, potential 💰savings
+]
+.relative.f4.mt3.bg-light-green.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Yields better precision due to the algorithm which maximizes information gain in each stage
+]
+
+]
+
+.flex-column.w-50[
+.b[ADO]n't
+
+.relative.f4.top--1.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Must be quantifiable such that the likelihood function depends explicitly on the values of the design variables being optimized
+]
+.relative.f4.top-0.bg-light-red.ba.bw1.br3.dark-blue.b--dark-blue.pv1.ph3.shadow-5[
+Computationally harder to implement, both for the 👩‍🔬 and 💻
+]
+]
+
+
+]
+
+---
+class: inverse middle center
+
+# Thank you
+
+---
+.my-header[
+.title[
+References
+]
+]
+
+.relative.top--1.mt6.bg-near-white.ph3.pv2.b--light-gray.ba.br4.bw2.shadow-4.f4[
+* [Neuroscience, 5th Edition](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3584490/)
+* [Neuroscience Needs Behavior: Correcting a Reductionist Bias](https://www.sciencedirect.com/science/article/pii/S0896627316310406#bib42)
+* [Dopamine, corticostriatal connectivity, and intertemporal choice](https://pubmed.ncbi.nlm.nih.gov/22764248/)
+* [Why Don't We Move Faster? Parkinson's Disease, Movement Vigot, and Implicit Motivation](https://www.jneurosci.org/content/27/27/7105)
+* [What Is Optogenetics and How Can We Use it to Discover More About the Brain?](https://kids.frontiersin.org/article/10.3389/frym.2017.00051)
+* [Rapid, precise, and reliable measurement of delay discounting using a Bayesian learning algorithm](https://www.nature.com/articles/s41598-020-68587-x)
+* [A Tutorial on Adaptive Design Optimization](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3755632/#FN2)
+* [ADOpy: a python package for adaptive design optimization](https://ccs-lab.github.io/pdfs/papers/yang2020adopy.pdf)
+]
+
+.relative.top--2.f5[Slides made with [xaringan](https://github.com/yihui/xaringan) and [xaringanExtra](https://github.com/gadenbuie/xaringanExtra)]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="my-macros.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

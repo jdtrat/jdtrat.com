@@ -1,0 +1,183 @@
+---
+title: "Temporary Storage in R"
+author: Jonathan Trattner
+excerpt: "A brief blog post on how to use temporary files to write data, read and manipulate it, and then delete the original file for storage optimization. I describe the `tempdir()`, `tempfile()`, and `unlink()`, functions and the difference between file/directory paths and contents."
+date: '2021-06-22'
+draft: false
+layout: single-sidebar
+categories: 
+  - R
+output:
+  blogdown::html_page:
+    toc: true
+    number_sections: false
+    toc_depth: 2
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#terminology">Terminology</a></li>
+<li><a href="#temporary-directory-paths">Temporary Directory Paths</a></li>
+<li><a href="#temporary-file-paths">Temporary File Paths</a></li>
+<li><a href="#adding-content">Adding Content</a></li>
+<li><a href="#deleting-temporary-files">Deleting Temporary Files</a></li>
+<li><a href="#example-of-using-temporary-files">Example of Using Temporary Files</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>My neuroscience lab at Wake Forest School of Medicine runs a lot of human behavioral studies, and the data is often stored as text files. I’ve been working on improving our data analysis pipelines and have developed packages to easily parse the data. The first function in the workflow accepts a path to the data file, e.g. <code>read_task_data()</code>. A colleague asked for help collecting and processing task data, uploading it to a cloud storage solution, and deleting local copies. I thought how I would achieve that and sent her some functions to try. She followed up with some great questions, and I thought I would write a quick post to clarify some topics and hopefully help others with a similar goal.</p>
+<div id="tldr" class="section level3">
+<h3>TLDR</h3>
+<p>A <strong>path</strong> is a character string that tells a computer where a directory (folder) or file is located. For example, “~/Desktop/cool-folder/hot-file.txt” says the file “hot-file.txt” is located within the “cool-folder” directory on the compiuter’s desktop.</p>
+<p>Directory paths can be generated using <code>tempdir()</code>, which returns a directory path that exists only as long as the current R Session. File paths can be generated using <code>tempfile()</code>, which returns a random character string within a specified directory, defaulting to <code>tempdir()</code>, that has a file prefix and (optional) file extension. By default, these directories and files have no content, but can be populated with functions such as <code>writeLines()</code>.</p>
+<p>To optimize storage space, the <code>unlink()</code> function allows you to delete directories and files, accepting a character vector of file/directory paths as its first argument.</p>
+</div>
+</div>
+<div id="terminology" class="section level2">
+<h2>Terminology</h2>
+<p>A <strong>directory</strong> is more commonly called a folder, and a <strong>file</strong> is just a file. <strong>Directories</strong> can have <strong>subdirectories</strong> (folders within folders), and files can be housed in any directory. You tell R, and other programming languages, where a directory or file is with a <strong>path</strong>. For example, on a Mac computer,<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> the path for your Desktop is “~/Desktop”.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></p>
+<blockquote>
+<p>Note: A path does not mean there is any content stored at that location. We will revisit this idea in a later section.</p>
+</blockquote>
+<p>A <em>temporary</em> directory or file is useful when operating on machines with storage constraints (e.g. cloud computing where storage costs 💵💰💵). That is, using a temporary directory or file allows you to write data, read it, manipulate it, or what-have-you, and delete all evidence when you’re done.</p>
+<p>In R, temporary directories are created with the function <code>tempdir()</code>, and temporary files with <code>tempfile()</code>.</p>
+</div>
+<div id="temporary-directory-paths" class="section level2">
+<h2>Temporary Directory Paths</h2>
+<p><code>tempdir()</code> returns a character string specifying the path to a session-specific directory. That is, when a new R session is initialized, a temporary directory is created, and it lasts only as long as the current R session. For example, typing <code>tempdir()</code> returns the following path:</p>
+<pre class="r"><code>session_1 &lt;- tempdir()
+session_1
+#&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//Rtmp6NRN7s&quot;</code></pre>
+<p>When I restart my R Session, however, and check if that directory exists, I see it does not, but a new temporary directory path does.</p>
+<pre class="r"><code># The old directory path does not exist
+# I&#39;m just copying that string here
+session_1 &lt;- &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//Rtmp6NRN7s&quot;
+dir.exists(session_1)
+#&gt; [1] FALSE
+
+# But a new one does:
+session_2 &lt;- tempdir()
+session_2
+#&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm&quot;
+
+# And these are not identical
+identical(session_1, session_2)
+#&gt; [1] FALSE</code></pre>
+<p>Anything that is saved within the temporary directory specified by the path from <code>tempdir()</code> will be unavailable at the start of a new R session.</p>
+</div>
+<div id="temporary-file-paths" class="section level2">
+<h2>Temporary File Paths</h2>
+<p>In contrast to <code>tempdir()</code>, the function <code>tempfile()</code> returns a file <em>relative to a specific directory</em>. That is, the following code will return a path for a generic file within the temporary directory.</p>
+<pre class="r"><code>file_1 &lt;- tempfile()
+file_1
+#&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9c3c57654632&quot;</code></pre>
+<p>By default, the file path is relative to the session-specific temporary directory – in this case it is relative to the one from the previous section. Also, note that the random string returned by tempfile, “file9c3c57654632”, is prefixed with “file” and not suffixed with a file extension such as <em>.txt</em>, <em>.pdf</em>, or <em>.png</em>. All three attributes – relative (temp) directory, file prefix and extension – can be specified with the <code>tempfile()</code> arguments. Consider:</p>
+<pre class="r"><code># Change the file prefix
+fancy_prefix &lt;- tempfile(pattern = &quot;fancy_prefix-&quot;)
+fancy_prefix
+#&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/fancy_prefix-9ec4a94a72f&quot;
+
+# Change the relative directory
+relativePath &lt;- tempfile(tmpdir = &quot;~/Desktop&quot;)
+relativePath
+#&gt; [1] &quot;~/Desktop/file9ec4256c0416&quot;
+
+# Specify the file extension as &quot;.txt&quot;
+txtPath &lt;- tempfile(fileext = &quot;.txt&quot;)
+txtPath
+#&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9ec45680538b.txt&quot;
+
+# Specify the file extension as &quot;.pdf&quot;
+pdfPath &lt;- tempfile(fileext = &quot;.pdf&quot;)
+pdfPath
+#&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9ec42ecf70b.pdf&quot;</code></pre>
+</div>
+<div id="adding-content" class="section level2">
+<h2>Adding Content</h2>
+<p>As alluded to earlier, the paths returned by <code>tempdir()</code> and <code>tempfile()</code> <strong>only</strong> returns a path, and does not have any content associated with it initially. Consider the following, where we create a temp file, and read it in with <code>readLines()</code>.</p>
+<pre class="r"><code>## # Creating a text path
+txtPath &lt;- tempfile(fileext = &quot;.txt&quot;)
+## txtPath
+## #&gt; [1] &quot;/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9c3c4499834d.txt&quot;
+readLines(txtPath)</code></pre>
+<pre><code>## Error in file(con, &quot;r&quot;): cannot open the connection</code></pre>
+<p>We see an error because this file <em>does not actually exist</em>. The path specifies <strong>where to find the file</strong>, though, we have not defined any content. We can do so with the <code>writeLines()</code> function as follows, and then read the data in with no error 🎉:</p>
+<pre class="r"><code># Write &quot;Hello, World&quot; to the file specified by the 
+# path txtPath.
+writeLines(text = &quot;Hello, World!&quot;, 
+           con = txtPath)
+
+# Read the contents from txtPath
+# We expect &quot;Hello, World!&quot;
+readLines(txtPath)</code></pre>
+<pre><code>## [1] &quot;Hello, World!&quot;</code></pre>
+</div>
+<div id="deleting-temporary-files" class="section level2">
+<h2>Deleting Temporary Files</h2>
+<p>In order to optimize storage space, you may wish to delete files or directories after they have been read/processed/saved/etc. This is most easily done with the <code>unlink()</code> function. For example:</p>
+<pre class="r"><code># Check whether the txtPath file exists
+file.exists(txtPath)
+#&gt; [1] TRUE
+
+# It does, so let&#39;s read the content.
+readLines(txtPath)
+#&gt; [1] &quot;Hello, World!&quot;
+
+# Now let&#39;s delete it.
+unlink(txtPath)
+
+# Look, the file doesn&#39;t exist any more!
+file.exists(txtPath)
+#&gt; [1] FALSE</code></pre>
+</div>
+<div id="example-of-using-temporary-files" class="section level2">
+<h2>Example of Using Temporary Files</h2>
+<p>Consider the following function, which accepts a file path, reads in the data, prints a sentence, and deletes the file specified by the path.</p>
+<pre class="r"><code>print_favorite_food &lt;- function(path) {
+  # Read data
+  table &lt;- read.table(path, header = TRUE)
+  # create sentence from data and print it
+  string &lt;- paste0(table$name, &quot;&#39;s favorite food is &quot;, table$favorite_food, &quot;.&quot;)
+  print(string)
+  # Delete original file when the function exits
+  on.exit(unlink(path), add = TRUE)
+}</code></pre>
+<p>Below, I show an example of using temporary files as discussed in this post. First, IO specify the file name using <code>tempfile()</code>. I then add content to it with <code>writeLines()</code> (note I could also use <code>write.csv()</code> or a number of other functions depending on the data). Next, for illustrative purposes, I check that the file does in fact exist. I then use the <code>print_favorite_food()</code> function described above to print a sentence based on the data and delete the original file. Lastly, I check that the file does not exist.</p>
+<pre class="r"><code># Set the file name
+file_name &lt;- tempfile(fileext = &quot;.txt&quot;)
+
+# Write content to the file
+writeLines(text = &quot;name favorite_food \n JT sushi&quot;,
+           con = file_name)
+
+# Check the file exists
+file.exists(file_name)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code># Perform some operation with the function, 
+# which deletes the original file on exit
+print_favorite_food(file_name)</code></pre>
+<pre><code>## [1] &quot;JT&#39;s favorite food is sushi.&quot;</code></pre>
+<pre class="r"><code># Check the file does not exist
+# We would expect FALSE here
+
+file.exists(file_name)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>In this post, I illustrated how to use temporary files to write data, read and manipulate it, and then delete the original file for storage optimization. I described the <code>tempdir()</code>, <code>tempfile()</code>, and <code>unlink()</code>, functions and the difference between file/directory paths and contents.</p>
+<p>If you have any feedback, please leave a comment below! For more of my work, please check out my <a href="https://github.com/jdtrat/">GitHub</a>. If you want to chat about anything (including neuroscience, #rstats, piano, or my cat), DM me on <a href="https://twitter.com/jdtrat">Twitter</a>. Need help with an #rstats or {shiny} project? I’m available for consulting – just <a href="mailto:jdt@jdtrat.com">send me an email</a>!</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Paths are specific to the operating system, so Windows and Mac have different path specifications.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>The tilde here means go to the root directory, which is the highest level directory and contains, among other directories, user’s Desktop, Downloads, and Document folders.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

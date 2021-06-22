@@ -1,0 +1,99 @@
+---
+title: "Introducing ghee"
+subtitle: ""
+excerpt: "Introducing my new package, ghee, a user-friendly wrapper for the {gh} package that provides client access to Github's REST API for common tasks such as creating issues and inviting collaborators."
+date: 2021-03-14
+author: "Jonathan Trattner"
+draft: false
+# layout options: single, single-sidebar
+layout: single
+categories:
+- R
+- Packages
+- Git & GitHub
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>I recently began using Github for more collaborative work. I was constantly leaving RStudio, opening up a browser, navigating to my repo-of-choice, and creating or commenting on issues, inviting people to a repository, etc. Around the same time, I joined <a href="https://colinfay.me">Colin Fay</a>, and #rstats users around the world in <a href="https://github.com/ColinFay/ur-first-5k">running a 5K by closing Github Issues</a>. Every week, we would get a new, customized, issue with a training plan. Naturally, I looked at the source code and saw that Colin automated most of it with the <a href="http://gh.r-lib.org/">{gh}</a> package.</p>
+<p>{gh} provides an extremely flexible API<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> interface for Github. It allows you to perform <a href="https://docs.github.com/en/rest/overview/endpoints-available-for-github-apps">hundreds of actions</a> involving organizations, teams, repos, and more. It also requires syntax that – to me at least – can be confusing. So, inspired by <a href="https://jennybryan.org">Jenny Bryan</a> and <a href="http://jimhester.com/">Jim Hester</a>’s <a href="http://happygitwithr.com/">book</a>, I developed {ghee}.</p>
+<div id="what-is-ghee" class="section level2">
+<h2>What is {ghee}?</h2>
+<blockquote>
+<p>{ghee} is a user-friendly wrapper for the {gh} package that provides client access to Github’s REST API for common tasks such as creating issues and inviting collaborators.</p>
+</blockquote>
+<p>I chose the name {ghee} for a couple reasons. One, my neighbor loves using ghee (clarified butter) to cook with, and I’ve become a fan. Two, I think it makes it easy to switch between this package and its underlying one, {gh}, if you need to perform unsupported actions.</p>
+<div align="center">
+<p>😱 Unsupported actions? What? 😱</p>
+</div>
+<p>Well, this package is <strong>not</strong> meant to replace {gh} or be an exhaustive API interface. It is designed to help you achieve common tasks with GitHub easily. As such, all functions begin with the prefix <code>gh_</code>, followed by categories of actions such as <code>collab</code> and <code>issue</code>. This allows you to take advantage of RStudio’s auto-completion feature and quickly accomplish your goals.</p>
+</div>
+<div id="how-do-you-install-ghee" class="section level2">
+<h2>How do you install {ghee}?</h2>
+<p>The source code for {ghee} is <a href="https://github.com/jdtrat/ghee">on my GitHub repo</a>, and the development version of it can be installed and loaded as follows:</p>
+<pre class="r"><code># Install the development version from GitHub
+remotes::install_github(&quot;jdtrat/ghee&quot;)
+
+# Load package
+library(ghee)</code></pre>
+</div>
+<div id="what-are-use-cases-for-ghee" class="section level2">
+<h2>What are use cases for {ghee}?</h2>
+<div id="collaboration" class="section level3">
+<h3>Collaboration</h3>
+<p>I’ve found it particularly helpful to use {ghee} when working with collaborators. Normally, to invite someone to a repo, I would have to navigate to its page on Github, go to settings, manage access, and send an invitation manually. With {ghee}, though, it’s as simple as specifying the repo and the invitee:</p>
+<pre class="r"><code>gh_collab_invite(path = &quot;owner/repository&quot;,
+                 invitee = &quot;bestfriend&quot;)</code></pre>
+<p>If you wanted to invite multiple friends at once, you could do so in a functional programming style. Here’s an example with the <a href="http://purrr.tidyverse.org/">{purrr}</a> package, which simply calls the <code>gh_collab_invite()</code> for each entry in the friends vector.</p>
+<pre class="r"><code>friends &lt;- c(&quot;friend&quot;, &quot;pal&quot;, &quot;amigo&quot;)
+purrr::walk(.x = friends, 
+            ~ gh_collab_invite(path = &quot;owner/repository&quot;, invitee = .x))</code></pre>
+</div>
+<div id="repositories" class="section level3">
+<h3>Repositories</h3>
+<p>{ghee} provides functions to create, edit, and delete repositories. As an example, I’ll create a repo called “ghee_test,” as seen below.</p>
+<pre class="r"><code># Create a Private Repo
+gh_repos_create(path = &quot;jdtrat/ghee_test&quot;, private = TRUE, description = &quot;A test repository.&quot;)</code></pre>
+<p><img src="ghee-images/ghee_test_create.png" /></p>
+<p>Note how the above picture shows an “Issues” tab. I don’t really want feedback on this repository, so I’m going to disable it with the <code>gh_repos_mutate()</code> function.</p>
+<pre class="r"><code># Disable Issues
+gh_repos_mutate(path = &quot;jdtrat/ghee_test&quot;, has_issues = FALSE)</code></pre>
+<p><img src="ghee-images/ghee_test_mutate_issues.png" /></p>
+<p>If you decide you don’t want a private repo anymore, no problem! That’s an easy change! In the picture below, you can see the private badge next to the title is gone.</p>
+<pre class="r"><code># Change Privacy Settings
+gh_repos_mutate(path = &quot;jdtrat/ghee_test&quot;, private = FALSE)</code></pre>
+<p><img src="ghee-images/ghee_test_mutate_privacy.png" /></p>
+<p>Now, I know what you’re thinking. You don’t like the repo name “ghee_test.” I don’t blame you. Let’s change it! Voila! It’s now “ghee_testing.”</p>
+<pre class="r"><code># Change Repo Name
+gh_repos_mutate(path = &quot;jdtrat/ghee_test&quot;, name = &quot;ghee_testing&quot;)</code></pre>
+<p><img src="ghee-images/ghee_test_mutate_name.png" /></p>
+<p>For more repository manipulation options, check out GitHub’s API <a href="https://docs.github.com/en/rest/reference/repos#update-a-repository">here</a>. You can also look at the documentation for <code>gh_repos_mutate()</code>, which expands upon the above examples.</p>
+<p>{ghee} also has a function to delete repositories, though it should be <em>used with caution</em>, as it is <u><strong>permanent</strong></u>. Further, if you want to use it, you will need to create a special GitHub PAT with the <a href="https://docs.github.com/en/github/administering-a-repository/deleting-a-repository">appropriate permissions</a>. This can be done with the with the <a href="http://usethis.r-lib.org">{usethis}</a> package as follows: <code>usethis::create_github_token(scopes = "delete_repo")</code>.</p>
+</div>
+<div id="issues" class="section level3">
+<h3>Issues</h3>
+<p>Another big component of GitHub are Issues. {ghee} includes some helper functions for interacting with them. These include, <code>gh_issue_list()</code>, <code>gh_issue_new()</code>, <code>gh_issue_comment()</code>, and <code>gh_issue_assign()</code>. The first function, perhaps unsurprisingly, lists the GitHub issues for a specific repo. The next one allows you to create a new issue, and the other two allow you to comment on or assign existing ones. For example, if I wanted to create an issue for my <a href="https://github.com/jdtrat/shinysurveys">{shinysurveys}</a> package, I could do so as follows:</p>
+<pre class="r"><code>gh_issue_new(path = &quot;jdtrat/shinysurveys&quot;, 
+             title = &quot;My Issue Title&quot;, 
+             body = &quot;Just wanted to pop on and say I love your package!&quot;)</code></pre>
+<p>To assign that issue to myself, or respond to it, I would use the issue number (which I could get with <code>gh_issue_list()</code>) and do something like this:</p>
+<pre class="r"><code>gh_issue_assign(path = &quot;jdtrat/shinysurveys&quot;,
+                issue_number = 5, 
+                assignees = &quot;jdtrat&quot;)
+
+gh_issue_comment(path = &quot;jdtrat/shinysurveys&quot;, 
+                 issue_number = 5, 
+                 body = &quot;Thanks, @jdtrat!&quot;)</code></pre>
+</div>
+</div>
+<div id="happy-githubing" class="section level2">
+<h2>Happy Git(Hub)ing!</h2>
+<p>Thanks for reading my blog post! I hope you find use for {ghee} in your day-to-day. If you have any feedback, I’d love for you to file an issue (bonus points if you use <code>gh_issue_new()</code>!). For more of my work, check out my <a href="https://github.com/jdtrat">GitHub</a>! If you want to chat about anything (including neuroscience, #rstats, piano, or my new kitten), DM me on <a href="https://twitter.com/jdtrat">Twitter</a>! Most importantly, Happy Git(Hub)ing!</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>An API, or Application Programming Interface, allows you to access certain features of a program, e.g. Google Drive or Github, from outside of its user-interface. The package <a href="http://googledrive.tidyverse.org/">{googledrive}</a>, for example, allows you to read, write, and manipulate files in your Google Drive Account from R.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

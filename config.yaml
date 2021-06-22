@@ -1,0 +1,118 @@
+baseURL: /
+theme: hugo-apero
+languageCode: en
+title: Jonathan Trattner
+author: Jonathan Trattner
+copyright: 'Jonathan Trattner'
+googleAnalytics: ''
+disqusShortname: ''
+metaDataFormat: yaml
+footnoteReturnLinkContents: '&#8617;'
+paginate: 5
+preserveTaxonomyNames: yes
+ignoreFiles:
+  - \.Rmd$
+  - \.Rmarkdown$
+  - _cache$
+  - \.knit\.md$
+  - \.utf8\.md$
+enableEmoji: yes
+markup:
+  defaultMarkdownHandler: goldmark
+  goldmark:
+    renderer:
+      hardwraps: no
+      unsafe: yes
+  highlight:
+    style: github
+  tableOfContents:
+    endLevel: 2
+    ordered: no
+    startLevel: 1
+params:
+  custom_theme: 'jdtrat-colors'
+  customheadingFontFamily: ""
+  customtextFontFamily: ""
+  description: Personal Portfolio of Jonathan Trattner.
+  favicon: /images/jdtrat_logo.png
+  headingFontFamily: "baskerville"
+  textFontFamily: "avenir"
+  logo: /images/jdtrat_logo.png
+  mainSections:
+    - blog
+  navallcaps: yes
+  orgLocal: Anywhere
+  orgName: Wake Forest School of Medicine
+  sharing_image: /images/jdtrat_logo.png
+  social:
+    - icon: github
+      icon_pack: fab
+      url: https://github.com/jdtrat/
+    - icon: twitter
+      icon_pack: fab
+      url: https://twitter.com/jdtrat
+    - icon: orcid
+      icon_pack: ai
+      url: http://orcid.org/0000-0002-1097-7603
+  socialInFooter: yes
+  socialInHeader: no
+  theme: ""
+  twitter: jdtrat
+  utterances:
+    issue_term: pathname
+    label: 'comments :crystal_ball:'
+    repo_name: jdtrat/jdtrat.com
+    theme: boxy-light
+    use_utterances: yes
+taxonomies:
+  category: categories
+  series: series
+  tag: tags
+menu:
+  footer:
+    - name: License
+      title: License
+      url: /license/
+      weight: 1
+    - name: Contact
+      title: Contact form
+      url: /contact/
+      weight: 2
+  header:
+    - name: About
+      title: About
+      url: /about/
+      weight: 1
+    - name: Blog
+      title: Blog
+      url: /blog/
+      weight: 2
+    - name: Projects
+      title: Project Portfolio
+      url: /project/
+      weight: 3
+    - name: Talks
+      title: Talks
+      url: /talk/
+      weight: 4
+privacy:
+  disqus:
+    disable: no
+  googleAnalytics:
+    anonymizeIP: yes
+    disable: no
+    respectDoNotTrack: yes
+  instagram:
+    disable: no
+    simple: yes
+  twitter:
+    disable: no
+    enableDNT: yes
+    simple: no
+  vimeo:
+    disable: no
+    enableDNT: yes
+    simple: yes
+  youtube:
+    disable: no
+    privacyEnhanced: yes

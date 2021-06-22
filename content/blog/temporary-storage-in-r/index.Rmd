@@ -1,0 +1,207 @@
+---
+title: "Temporary Storage in R"
+author: Jonathan Trattner
+excerpt: "A brief blog post on how to use temporary files to write data, read and manipulate it, and then delete the original file for storage optimization. I describe the `tempdir()`, `tempfile()`, and `unlink()`, functions and the difference between file/directory paths and contents."
+date: '2021-06-22'
+draft: false
+layout: single-sidebar
+categories: 
+  - R
+output:
+  blogdown::html_page:
+    toc: true
+    number_sections: false
+    toc_depth: 2
+---
+
+## Introduction
+
+My neuroscience lab at Wake Forest School of Medicine runs a lot of human behavioral studies, and the data is often stored as text files. I've been working on improving our data analysis pipelines and have developed packages to easily parse the data. The first function in the workflow accepts a path to the data file, e.g. `read_task_data()`. A colleague asked for help collecting and processing task data, uploading it to a cloud storage solution, and deleting local copies. I thought how I would achieve that and sent her some functions to try. She followed up with some great questions, and I thought I would write a quick post to clarify some topics and hopefully help others with a similar goal. 
+
+### TLDR
+
+A **path** is a character string that tells a computer where a directory (folder) or file is located. For example, "~/Desktop/cool-folder/hot-file.txt" says the file "hot-file.txt" is located within the "cool-folder" directory on the compiuter's desktop.
+
+Directory paths can be generated using `tempdir()`, which returns a directory path that exists only as long as the current R Session. File paths can be generated using `tempfile()`, which returns a random character string within a specified directory, defaulting to `tempdir()`, that has a file prefix and (optional) file extension. By default, these directories and files have no content, but can be populated with functions such as `writeLines()`. 
+
+To optimize storage space, the `unlink()` function allows you to delete directories and files, accepting a character vector of file/directory paths as its first argument.
+
+## Terminology
+
+A **directory** is more commonly called a folder, and a **file** is just a file. **Directories** can have **subdirectories** (folders within folders), and files can be housed in any directory. You tell R, and other programming languages, where a directory or file is with a **path**. For example, on a Mac computer,[^1] the path for your Desktop is "\~/Desktop".[^2]
+
+[^1]: Paths are specific to the operating system, so Windows and Mac have different path specifications.
+
+[^2]: The tilde here means go to the root directory, which is the highest level directory and contains, among other directories, user's Desktop, Downloads, and Document folders.
+
+> Note: A path does not mean there is any content stored at that location. We will revisit this idea in a later section.
+
+A *temporary* directory or file is useful when operating on machines with storage constraints (e.g. cloud computing where storage costs 💵💰💵). That is, using a temporary directory or file allows you to write data, read it, manipulate it, or what-have-you, and delete all evidence when you're done.
+
+In R, temporary directories are created with the function `tempdir()`, and temporary files with `tempfile()`.
+
+## Temporary Directory Paths
+
+`tempdir()` returns a character string specifying the path to a session-specific directory. That is, when a new R session is initialized, a temporary directory is created, and it lasts only as long as the current R session. For example, typing `tempdir()` returns the following path:
+
+```{r, eval = FALSE}
+session_1 <- tempdir()
+session_1
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//Rtmp6NRN7s"
+```
+
+When I restart my R Session, however, and check if that directory exists, I see it does not, but a new temporary directory path does.
+
+```{r, eval = FALSE}
+# The old directory path does not exist
+# I'm just copying that string here
+session_1 <- "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//Rtmp6NRN7s"
+dir.exists(session_1)
+#> [1] FALSE
+
+# But a new one does:
+session_2 <- tempdir()
+session_2
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm"
+
+# And these are not identical
+identical(session_1, session_2)
+#> [1] FALSE
+```
+
+Anything that is saved within the temporary directory specified by the path from `tempdir()` will be unavailable at the start of a new R session.
+
+## Temporary File Paths
+
+In contrast to `tempdir()`, the function `tempfile()` returns a file *relative to a specific directory*. That is, the following code will return a path for a generic file within the temporary directory.
+
+```{r, eval = FALSE}
+file_1 <- tempfile()
+file_1
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9c3c57654632"
+```
+
+By default, the file path is relative to the session-specific temporary directory -- in this case it is relative to the one from the previous section. Also, note that the random string returned by tempfile, "file9c3c57654632", is prefixed with "file" and not suffixed with a file extension such as *.txt*, *.pdf*, or *.png*. All three attributes -- relative (temp) directory, file prefix and extension -- can be specified with the `tempfile()` arguments. Consider:
+
+```{r, eval = FALSE}
+
+# Change the file prefix
+fancy_prefix <- tempfile(pattern = "fancy_prefix-")
+fancy_prefix
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/fancy_prefix-9ec4a94a72f"
+
+# Change the relative directory
+relativePath <- tempfile(tmpdir = "~/Desktop")
+relativePath
+#> [1] "~/Desktop/file9ec4256c0416"
+
+# Specify the file extension as ".txt"
+txtPath <- tempfile(fileext = ".txt")
+txtPath
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9ec45680538b.txt"
+
+# Specify the file extension as ".pdf"
+pdfPath <- tempfile(fileext = ".pdf")
+pdfPath
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9ec42ecf70b.pdf"
+```
+
+## Adding Content
+
+As alluded to earlier, the paths returned by `tempdir()` and `tempfile()` **only** returns a path, and does not have any content associated with it initially. Consider the following, where we create a temp file, and read it in with `readLines()`.
+
+```{r, eval = c(2,5), error = TRUE, warning = FALSE}
+# Creating a text path
+txtPath <- tempfile(fileext = ".txt")
+txtPath
+#> [1] "/var/folders/cx/76l4vlrx20scjnnfm77w5vpr0000gn/T//RtmpTUHgmm/file9c3c4499834d.txt"
+readLines(txtPath)
+```
+
+We see an error because this file *does not actually exist*. The path specifies **where to find the file**, though, we have not defined any content. We can do so with the `writeLines()` function as follows, and then read the data in with no error 🎉:
+
+```{r write-txt-file}
+
+# Write "Hello, World" to the file specified by the 
+# path txtPath.
+writeLines(text = "Hello, World!", 
+           con = txtPath)
+
+# Read the contents from txtPath
+# We expect "Hello, World!"
+readLines(txtPath)
+
+```
+
+## Deleting Temporary Files
+
+In order to optimize storage space, you may wish to delete files or directories after they have been read/processed/saved/etc. This is most easily done with the `unlink()` function. For example:
+
+```{r, eval = FALSE}
+
+# Check whether the txtPath file exists
+file.exists(txtPath)
+#> [1] TRUE
+
+# It does, so let's read the content.
+readLines(txtPath)
+#> [1] "Hello, World!"
+
+# Now let's delete it.
+unlink(txtPath)
+
+# Look, the file doesn't exist any more!
+file.exists(txtPath)
+#> [1] FALSE
+```
+
+## Example of Using Temporary Files
+
+Consider the following function, which accepts a file path, reads in the data, prints a sentence, and deletes the file specified by the path.
+
+```{r print-fave-food-function}
+
+print_favorite_food <- function(path) {
+  # Read data
+  table <- read.table(path, header = TRUE)
+  # create sentence from data and print it
+  string <- paste0(table$name, "'s favorite food is ", table$favorite_food, ".")
+  print(string)
+  # Delete original file when the function exits
+  on.exit(unlink(path), add = TRUE)
+}
+
+```
+
+Below, I show an example of using temporary files as discussed in this post. First, IO specify the file name using `tempfile()`. I then add content to it with `writeLines()` (note I could also use `write.csv()` or a number of other functions depending on the data). Next, for illustrative purposes, I check that the file does in fact exist. I then use the `print_favorite_food()` function described above to print a sentence based on the data and delete the original file. Lastly, I check that the file does not exist.
+
+```{r sample-workflow}
+
+# Set the file name
+file_name <- tempfile(fileext = ".txt")
+
+# Write content to the file
+writeLines(text = "name favorite_food \n JT sushi",
+           con = file_name)
+
+# Check the file exists
+file.exists(file_name)
+
+# Perform some operation with the function, 
+# which deletes the original file on exit
+print_favorite_food(file_name)
+
+# Check the file does not exist
+# We would expect FALSE here
+
+file.exists(file_name)
+
+```
+
+
+## Conclusion
+
+In this post, I illustrated how to use temporary files to write data, read and manipulate it, and then delete the original file for storage optimization. I described the `tempdir()`, `tempfile()`, and `unlink()`, functions and the difference between file/directory paths and contents.
+
+If you have any feedback, please leave a comment below! For more of my work, please check out my [GitHub](https://github.com/jdtrat/). If you want to chat about anything (including neuroscience, \#rstats, piano, or my cat), DM me on [Twitter](https://twitter.com/jdtrat). Need help with an \#rstats or {shiny} project? I'm available for consulting -- just [send me an email](mailto:jdt@jdtrat.com)!
+

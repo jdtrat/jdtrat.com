@@ -1,0 +1,387 @@
+---
+title: "Extending shinysurveys with Custom Input Types"
+author: Jonathan Trattner
+excerpt: "A brief blog docunmenting a new feature of my package, shinysurveys, allowing users to define custom input types in their surveys. I walk through three examples: `sliderInput()`, `dateInput()`, and `shinyWidgets::sliderTextInput()`."
+date: '2021-06-22'
+draft: false
+layout: single-sidebar
+categories: 
+  - R
+  - Shiny
+  - Packages
+output:
+  blogdown::html_page:
+    toc: true
+    number_sections: false
+    toc_depth: 2
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
+
+<div id="TOC">
+<ul>
+<li><a href="#motivation">Motivation</a></li>
+<li><a href="#examples">Examples</a>
+<ul>
+<li><a href="#adding-a-sliderinput">Adding a <code>sliderInput</code></a></li>
+<li><a href="#adding-a-dateinput">Adding a <code>dateInput</code></a></li>
+<li><a href="#adding-a-slidertextinput">Adding a <code>sliderTextInput</code></a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+
+<div id="motivation" class="section level1">
+<h1>Motivation</h1>
+<p>The original idea for {shinysurveys} was to provide a select set of
+well-supported input types that are commonly used with surveys. However,
+shortly after the package was published on CRAN, additional input types
+were requested (see GitHub <a href="https://github.com/jdtrat/shinysurveys/issues/6">issue
+#6</a> or
+<a href="https://github.com/jdtrat/shinysurveys/issues/18">#18</a>).</p>
+<p>In order to make the package as light-weight as possible (minimize
+dependence on external code), I did not wish to implement any input
+types not native to {shiny}. I also did not want to rewrite the
+internals of {shinysurveys} whenever a new input-type was requested. As
+a solution, I developed a framework for custom inputs to allow users to
+include different input types that meet their use case. In the next
+section, I outline three examples of how to add custom input types.</p>
+<p>As of now, custom inputs are only supported in the development version of {shinysurveys}, which can be installed as follows:</p>
+<pre class="r"><code># install.packages(&quot;remotes&quot;)
+remotes::install_github(&quot;jdtrat/shinysurveys@extend-shinysurveys&quot;)
+library(shinysurveys)</code></pre>
+</div>
+<div id="examples" class="section level1">
+<h1>Examples</h1>
+<div id="adding-a-sliderinput" class="section level2">
+<h2>Adding a <code>sliderInput</code></h2>
+<p>Consider the question “On a scale from 1-10, how much do you love
+sushi?”. An ideal input type would be {shiny}’s <code>sliderInput</code>. However,
+this is not natively supported by {shinysurveys} as the slider input
+requires multiple arguments, including a minimum, maximum, and starting
+value. To get around this, we can define a new input type using a new
+function <code>extendInputType()</code>. As in a typical shiny survey, we can
+define our question as follows:</p>
+<pre class="r"><code># Define a question as normal with the `input_type` set to &quot;slider&quot;, which is not natively supported by {shinysurveys}.
+
+slider_question &lt;- data.frame(
+  question = &quot;On a scale from 1-10, how much do you love sushi?&quot;,
+  option = NA,
+  input_type = &quot;slider&quot;,
+  input_id = &quot;sushi_scale&quot;,
+  dependence = NA,
+  dependence_value = NA,
+  required = TRUE
+  )</code></pre>
+<p>This looks like:</p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+question
+</th>
+<th style="text-align:left;">
+option
+</th>
+<th style="text-align:left;">
+input_type
+</th>
+<th style="text-align:left;">
+input_id
+</th>
+<th style="text-align:left;">
+dependence
+</th>
+<th style="text-align:left;">
+dependence_value
+</th>
+<th style="text-align:left;">
+required
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+On a scale from 1-10, how much do you love sushi?
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+slider
+</td>
+<td style="text-align:left;">
+sushi_scale
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+TRUE
+</td>
+</tr>
+</tbody>
+</table>
+<p>If we try to define the user-interface component of the shiny
+application, we will get the following error which most commonly occurs
+when {shinysurveys} doesn’t recognize an input type.</p>
+<pre class="r"><code>library(shiny)
+library(shinysurveys)
+
+ui &lt;- fluidPage(
+  surveyOutput(df = slider_question,
+               survey_title = &quot;Testing the Slider Input&quot;)
+)</code></pre>
+<pre><code>## Error in FUN(X[[i]], ...): Input type &#39;slider&#39; from the supplied data frame of questions is not recognized by {shinysurveys}.
+##                 Did you mean to register a custom input extension with `extendInputType()`?</code></pre>
+<p>To overcome this, we can use <code>extendInputType()</code>. This function accepts
+two arguments. The first, <code>input_type</code>, is a string of the input type
+used in the questions data frame. The second is the input definition.
+Consider:</p>
+<pre class="r"><code># Register a slider input to {shinysurveys} with a custom minimum and maximum value.
+
+extendInputType(input_type = &quot;slider&quot;, {
+  shiny::sliderInput(
+    inputId = surveyID(),
+    label = surveyLabel(),
+    min = 1,
+    max = 10,
+    value = 5
+    ) 
+})</code></pre>
+<pre><code>## Input Type &quot;slider&quot; registered with {shinysurveys}. If the session restarts, you will need to re-register it.
+## To see all registered input extensions, please call `shinysurveys::listInputExtensions()`.</code></pre>
+<p>Note the inputId and label are set to <code>surveyID()</code> and <code>surveyLabel()</code>,
+respectively. These are necessary helper functions to ensure that survey
+features such as required questions function properly. As such, <strong>all
+extensions need <code>inputId = surveyID()</code> and <code>label = surveyLabel()</code>.</strong></p>
+<p>Now, when we try to define the user-interface, we don’t see any errors:</p>
+<pre class="r"><code># By defining the input type above, this works! Yay!
+ui &lt;- fluidPage(
+  surveyOutput(df = slider_question,
+               survey_title = &quot;Testing the Slider Input&quot;)
+)</code></pre>
+<p>When running the full application, we see the following survey:</p>
+<p><img src="images/Screen%20Shot%202021-06-05%20at%2011.51.03%20PM.png" /></p>
+</div>
+<div id="adding-a-dateinput" class="section level2">
+<h2>Adding a <code>dateInput</code></h2>
+<p>As requested in issue
+<a href="https://github.com/jdtrat/shinysurveys/issues/18">#18</a>, a user needed
+a <code>dateInput</code> with special restrictions for possible values (dates).
+<a href="https://github.com/jdtrat/shinysurveys/issues/18#issue-856073749">The user’s
+reprex</a>
+showed the error we saw earlier, because {shinysurveys} does not
+natively support “date” inputs. Consider again the following question:</p>
+<pre class="r"><code># Define a question as normal with the `input_type` set to &quot;date&quot;, which is not natively supported by {shinysurveys}.
+date_question &lt;- data.frame(
+  question = &quot;When do you graduate?&quot;,
+  option = NA,
+  input_type = &quot;date&quot;,
+  input_id = &quot;grad_date&quot;,
+  dependence = NA,
+  dependence_value = NA,
+  required = FALSE
+  )</code></pre>
+<p>This looks like:</p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+question
+</th>
+<th style="text-align:left;">
+option
+</th>
+<th style="text-align:left;">
+input_type
+</th>
+<th style="text-align:left;">
+input_id
+</th>
+<th style="text-align:left;">
+dependence
+</th>
+<th style="text-align:left;">
+dependence_value
+</th>
+<th style="text-align:left;">
+required
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+When do you graduate?
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+date
+</td>
+<td style="text-align:left;">
+grad_date
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+</tbody>
+</table>
+<p>As in the slider example, if we try to define the user-interface
+component of the shiny application, we will get the following error
+which most commonly occurs when {shinysurveys} doesn’t recognize an
+input type.</p>
+<pre class="r"><code>library(shiny)
+library(shinysurveys)
+
+ui &lt;- fluidPage(
+  surveyOutput(df = date_question,
+               survey_title = &quot;Testing the Date Input&quot;)
+)</code></pre>
+<pre><code>## Error in FUN(X[[i]], ...): Input type &#39;date&#39; from the supplied data frame of questions is not recognized by {shinysurveys}.
+##                 Did you mean to register a custom input extension with `extendInputType()`?</code></pre>
+<p>Using <code>extendInputType()</code> we can overcome this.</p>
+<pre class="r"><code># Register a date input to {shinysurveys}, limiting possible dates to a twenty-day period.
+
+extendInputType(&quot;date&quot;, {
+  shiny::dateInput(
+    inputId = surveyID(),
+    value = Sys.Date(),
+    label = surveyLabel(),
+    min = Sys.Date()-10,
+    max = Sys.Date()+10
+  )
+})</code></pre>
+<pre><code>## Input Type &quot;date&quot; registered with {shinysurveys}. If the session restarts, you will need to re-register it.
+## To see all registered input extensions, please call `shinysurveys::listInputExtensions()`.</code></pre>
+<p>Now, when we try to define the user-interface, we don’t see any errors:</p>
+<pre class="r"><code># By defining the input type above, this works! Yay!
+ui &lt;- fluidPage(
+  surveyOutput(df = date_question,
+               survey_title = &quot;Testing the Date Input&quot;)
+)</code></pre>
+<p>When running the full application, we see the following survey:</p>
+<p><img src="images/Screen%20Shot%202021-06-06%20at%2012.00.02%20AM.png" /></p>
+</div>
+<div id="adding-a-slidertextinput" class="section level2">
+<h2>Adding a <code>sliderTextInput</code></h2>
+<p>Both of the previous examples showed how to extend {shinysurveys} with
+inputs native to the {shiny} package. What about other packages, though?
+Could you use any input type? Turns out, you can! Consider a special
+text-based slider input from the package
+<a href="https://dreamrs.github.io/shinyWidgets/index.html">{shinyWidgets}</a>.
+This allows you to have text labels on a slider input, unlike the one
+built into {shiny}.</p>
+<p>Consider the question “Please indicate how strongly you love sushi from
+‘Fish? Yuck!’ to ‘Love of my life’.” We can define it as follows:</p>
+<pre class="r"><code># Define a question as normal with the `input_type` set to &quot;date&quot;, which is not natively supported by {shinysurveys}.
+textSlider_question &lt;- data.frame(
+  question = &quot;Please indicate how strongly you love sushi from &#39;Fish? Yuck!&#39; to &#39;Love of my life&#39;.&quot;,
+  option = NA,
+  input_type = &quot;textSlider&quot;,
+  input_id = &quot;sushi_feelings&quot;,
+  dependence = NA,
+  dependence_value = NA,
+  required = FALSE
+  )</code></pre>
+<p>This looks like:</p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+question
+</th>
+<th style="text-align:left;">
+option
+</th>
+<th style="text-align:left;">
+input_type
+</th>
+<th style="text-align:left;">
+input_id
+</th>
+<th style="text-align:left;">
+dependence
+</th>
+<th style="text-align:left;">
+dependence_value
+</th>
+<th style="text-align:left;">
+required
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Please indicate how strongly you love sushi from ‘Fish? Yuck!’ to ‘Love of my life’.
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+textSlider
+</td>
+<td style="text-align:left;">
+sushi_feelings
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+</tbody>
+</table>
+<p>We define the “textSlider” extension below and see an error-free
+user-interface definiton:</p>
+<pre class="r"><code>extendInputType(&quot;textSlider&quot;, {
+  shinyWidgets::sliderTextInput(
+    inputId = surveyID(),
+    label = surveyLabel(),
+    force_edges = TRUE,
+    choices = c(&quot;Love of my life&quot;, &quot;Big fan&quot;, &quot;I can eat it&quot;, &quot;It&#39;s not cooked?&quot;, &quot;Fish? Yuck!&quot;),
+    selected = &quot;I can eat it&quot;
+  )
+})</code></pre>
+<pre><code>## Input Type &quot;textSlider&quot; registered with {shinysurveys}. If the session restarts, you will need to re-register it.
+## To see all registered input extensions, please call `shinysurveys::listInputExtensions()`.</code></pre>
+<pre class="r"><code># By defining the input type above, this works! Yay!
+ui &lt;- fluidPage(
+  surveyOutput(df = textSlider_question,
+               survey_title = &quot;Testing the Text Slider Input&quot;)
+)</code></pre>
+<p>When running the full application, we see the following survey:</p>
+<p><img src="images/Screen%20Shot%202021-06-06%20at%2012.13.04%20AM.png" /></p>
+</div>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>Thanks for reading my blog post! I hope you’ll find this new feature of
+{shinysurveys} useful. If you have any feedback, I’d love for you to
+file an <a href="https://github.com/jdtrat/shinysurveys/issues">issue</a>. For more
+of my work, please check out my <a href="https://github.com/jdtrat/">GitHub</a>. If
+you want to chat about anything (including neuroscience, #rstats,
+piano, or my cat), DM me on <a href="https://twitter.com/jdtrat">Twitter</a>. Need
+help with an #rstats or {shiny} project? I’m available for consulting
+– just <a href="mailto:jdt@jdtrat.com">send me an email</a>!</p>
+</div>
