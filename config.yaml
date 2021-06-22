@@ -1,4 +1,4 @@
-baseURL: /
+baseURL: "https://jdtrat.com"
 theme: hugo-apero
 languageCode: en
 title: Jonathan Trattner

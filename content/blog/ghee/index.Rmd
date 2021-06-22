@@ -11,6 +11,9 @@ categories:
 - R
 - Packages
 - Git & GitHub
+image:
+  caption: 'Hex Logo for ghee'
+  focal_point: ''
 ---
 
 ```{r setup, include=FALSE}
@@ -39,7 +42,7 @@ Well, this package is **not** meant to replace {gh} or be an exhaustive API inte
 
 The source code for {ghee} is [on my GitHub repo](https://github.com/jdtrat/ghee), and the development version of it can be installed and loaded as follows:
 
-``` {.r}
+``` {r, eval = FALSE}
 # Install the development version from GitHub
 remotes::install_github("jdtrat/ghee")
 

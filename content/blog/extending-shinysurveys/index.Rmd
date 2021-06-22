@@ -2,7 +2,7 @@
 title: "Extending shinysurveys with Custom Input Types"
 author: Jonathan Trattner
 excerpt: "A brief blog docunmenting a new feature of my package, shinysurveys, allowing users to define custom input types in their surveys. I walk through three examples: `sliderInput()`, `dateInput()`, and `shinyWidgets::sliderTextInput()`."
-date: '2021-06-22'
+date: '2021-06-07'
 draft: false
 layout: single-sidebar
 categories: 
