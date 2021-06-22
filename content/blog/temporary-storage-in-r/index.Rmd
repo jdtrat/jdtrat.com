@@ -108,7 +108,7 @@ pdfPath
 
 ## Adding Content
 
-As alluded to earlier, the paths returned by `tempdir()` and `tempfile()` **only** returns a path, and does not have any content associated with it initially. Consider the following, where we create a temp file, and read it in with `readLines()`.
+As alluded to earlier, `tempdir()` and `tempfile()` *only* return a path to a directory or file. These will not have content associated with it initially. Consider the following, where we create a temp file, and read it in with `readLines()`.
 
 ```{r, eval = c(2,5), error = TRUE, warning = FALSE}
 # Creating a text path
@@ -118,7 +118,7 @@ txtPath
 readLines(txtPath)
 ```
 
-We see an error because this file *does not actually exist*. The path specifies **where to find the file**, though, we have not defined any content. We can do so with the `writeLines()` function as follows, and then read the data in with no error 🎉:
+We see an error because this file *does not actually exist*. The path specifies **where to find the file**, though, we have not defined any content. We can use `writeLines()` as follows to add content and then read the data in with no error 🎉:
 
 ```{r write-txt-file}
 
@@ -173,7 +173,7 @@ print_favorite_food <- function(path) {
 
 ```
 
-Below, I show an example of using temporary files as discussed in this post. First, IO specify the file name using `tempfile()`. I then add content to it with `writeLines()` (note I could also use `write.csv()` or a number of other functions depending on the data). Next, for illustrative purposes, I check that the file does in fact exist. I then use the `print_favorite_food()` function described above to print a sentence based on the data and delete the original file. Lastly, I check that the file does not exist.
+Below, I show an example of using temporary files as discussed in this post. First, I specify the file name using `tempfile()`. I then add content to it with `writeLines()` (note I could also use `write.csv()` or a number of other functions depending on the data). Next, for illustrative purposes, I check that the file does in fact exist. I then use the `print_favorite_food()` function described above to print a sentence based on the data and delete the original file. Lastly, I check that the file does not exist.
 
 ```{r sample-workflow}
 
@@ -203,5 +203,5 @@ file.exists(file_name)
 
 In this post, I illustrated how to use temporary files to write data, read and manipulate it, and then delete the original file for storage optimization. I described the `tempdir()`, `tempfile()`, and `unlink()`, functions and the difference between file/directory paths and contents.
 
-If you have any feedback, please leave a comment below! For more of my work, please check out my [GitHub](https://github.com/jdtrat/). If you want to chat about anything (including neuroscience, \#rstats, piano, or my cat), DM me on [Twitter](https://twitter.com/jdtrat). Need help with an \#rstats or {shiny} project? I'm available for consulting -- just [send me an email](mailto:jdt@jdtrat.com)!
+If you have any questions or feedback, please leave a comment below! For more of my work, please check out my [GitHub](https://github.com/jdtrat/). If you want to chat about anything (including neuroscience, \#rstats, piano, or my cat), DM me on [Twitter](https://twitter.com/jdtrat). Need help with an \#rstats or {shiny} project? I'm available for consulting -- just [send me an email](mailto:jdt@jdtrat.com)!
 
