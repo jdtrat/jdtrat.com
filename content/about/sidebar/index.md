@@ -3,6 +3,7 @@
 author: "Jonathan Trattner"
 role: ""
 avatar_shape: rounded # circle, square, rounded, leave blank to exclude
+avatar_border: true # should a border be placed on avatar, true or false
 show_social_links: true # specify social accounts in site config
 audio_link_label: "" # leave blank to exclude
 link_list_label: "" # bookmarks, elsewhere, etc.
