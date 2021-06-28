@@ -12,7 +12,7 @@ links:
 - icon: door-open
   icon_pack: fas
   name: website
-  url: https://shinysurveys.jdtrat.com/
+  url: https://shinysurveys.jdtrat.com
 - icon: github
   icon_pack: fab
   name: code
@@ -28,7 +28,7 @@ title: shinysurveys
 
 ------------------------------------------------------------------------
 
-<img src="https://www.jdtrat.com/packages/shinysurveys/resources/shinysurveys_hex-final.png" width="328" height="378" align="right"/>
+<img src="https://www.jdtrat.com/project/shinysurveys/featured-hex.png" width="328" height="378" align="right"/>
 
 {shinysurveys} provides easy-to-use, minimalistic code for creating and deploying surveys in Shiny. Originally inspired by Dean Attali's [shinyforms](https://github.com/daattali/shinyforms), this package provides a framework for robust surveys, similar to Google Forms, in R with [Shiny](https://github.com/rstudio/shiny/).
 
@@ -63,7 +63,7 @@ library(shinysurveys)
 
 A survey made with our package might look like this:
 
-![](https://www.jdtrat.com/packages/shinysurveys/resources/shinysurveys-final-demo.gif)
+![](https://www.jdtrat.com/project/shinysurveys/shinysurveys-final-demo.gif)
 
 You can run a demo survey with the function `shinysurveys::demo_survey()`.
 
