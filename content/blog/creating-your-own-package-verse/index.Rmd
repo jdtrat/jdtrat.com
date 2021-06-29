@@ -1,0 +1,215 @@
+---
+title: "Creating Your Own R Package 'verse'"
+author: Jonathan Trattner
+excerpt: "One of my favorite features of the tidyverse is the lovely message printed to the console when its loaded. I delved into their source code to see how to achieve that. In this post, I describe the end-product: metamakr, an R package development tool for easily creating your own package 'verse'."
+date: '2021-06-29'
+draft: false
+layout: single-sidebar
+categories: 
+  - R
+  - Packages
+output:
+  blogdown::html_page:
+    toc: true
+    number_sections: false
+    toc_depth: 2
+---
+
+# Introduction
+
+Hi! If you're reading this blog post, I would bet you know of the tidyverse. I'd even bet you've used the tidyverse in your day-to-day. The [tidyverse](https://tidyverse.tidyverse.org) is an **incredible** suite of packages that, per its documentation, "work in harmony because they share common data representations and API design." It's comprised of eight core packages including [readr](https://readr.tidyverse.org/) for importing data, [dplyr](https://dplyr.tidyverse.org/) and [tidyr](https://tidyr.tidyverse.org/), for manipulating and tidying data; and [ggplot2](https://ggplot2.tidyverse.org/), for visualizing data.
+
+These packages can be loaded into your current R session via the `library()` function, e.g. `library(dplyr)` or `library(ggplot2)`. Each can be loaded individually:
+
+```{r load-individual, eval = FALSE}
+library(ggplot2)
+library(purrr)
+#> 
+#> Attaching package: 'purrr'
+#> The following object is masked from 'package:magrittr':
+#> 
+#>     set_names
+library(tibble)
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+library(tidyr)
+#> 
+#> Attaching package: 'tidyr'
+#> The following object is masked from 'package:magrittr':
+#> 
+#>     extract
+library(stringr)
+library(readr)
+library(forcats)
+```
+
+or, they can all be loaded at once:
+
+```{r load-tidyverse, eval = FALSE}
+library(tidyverse)
+#> ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──
+#> ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+#> ✓ tibble  3.1.0     ✓ dplyr   1.0.5
+#> ✓ tidyr   1.1.3     ✓ stringr 1.4.0
+#> ✓ readr   1.4.0     ✓ forcats 0.5.1
+#> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+#> x dplyr::filter() masks stats::filter()
+#> x dplyr::lag()    masks stats::lag()
+```
+
+That is, the package `tidyverse` allows users to easily load (and install) multiple packages in a single step. One of my favorite features of this is the lovely message printed to the console. In this post, I introduce a development tool I made to easily create meta packages. Without further ado...
+
+# Hello, metamakr
+
+> Inspired by the [tidyverse](https://tidyverse.tidyverse.org), metamakr is designed to help people create their own package 'verse'. metamakr is a development tool that allows you to bundle your own related packages, e.g. all internal packages for a research lab or company.
+
+Nigh all the code in metamakr is from studying (and often copying) the [tidyverse source code](https://github.com/tidyverse/tidyverse/blob/master/R/attach.R). metamakr provides one function, `create_meta_package()`, which accepts three arguments: the name of the meta package, a character vector of the packages to import, and (if applicable), a logical vector indicating which of the imported packages are development versions.
+
+`create_meta_package()` calls [`usethis::use_package()` or `usethis::use_dev_package()`](https://usethis.r-lib.org/reference/use_package.html) for each import and creates three files used to attach the packages as needed with a tidyverse-style start up message. These files are:
+
++----------+-----------------------------------------------------------------------------------------------------+
+| File     | Description                                                                                         |
++:========:+:===================================================================================================:+
+| attach.R | Provides code used to attach all (unattached) packages. This includes the stylized startup message. |
++----------+-----------------------------------------------------------------------------------------------------+
+| utils.R  | Provides code for utility functions used to style startup message.                                  |
++----------+-----------------------------------------------------------------------------------------------------+
+| zzz.R    | Defines the `.onAttach()` function to display the startup message.                                  |
++----------+-----------------------------------------------------------------------------------------------------+
+
+The resulting code is heavily commented from my foray into the tidyverse source to help package developers understand the process and adapt it as needed. As such, I'm not going to describe the technical details in-depth here, but I will illustrate an example of using metamakr to combine two of my CRAN packages, [shinysurveys](https://shinysurveys.jdtrat.com/) and [ghee](https://jdtrat.com/project/ghee). I'll call my package `metajdt`.
+
+## Creating `metajdt`
+
+### Setup
+
+To create a package with RStudio, I called `usethis::create_package()`.[^1] I have my DESCRIPTION defaults set, so when I do this, it looks like this:
+
+    Package: metajdt
+    Title: What the Package Does (One Line, Title Case)
+    Version: 0.0.0.9000
+    Authors@R: 
+        person(given = "Jonathan",
+               family = "Trattner",
+               role = c("aut", "cre"),
+               email = "jdt@jdtrat.com",
+               comment = c(ORCID = "0000-0002-1097-7603"))
+    Description: What the package does (one paragraph).
+    License: MIT + file LICENSE
+    Encoding: UTF-8
+    Language: es
+    LazyData: true
+    Roxygen: list(markdown = TRUE)
+    RoxygenNote: 7.1.1.9000
+
+[^1]: I assume you are familiar with R package development. If not, I encourage you to check out Hadley Wickham and Jenny Bryan's phenomenal work, [*R Packages*](https://r-pkgs.org).
+
+Note, there are no files within my `R` subdirectory, and my DESCRIPTION file lists no imports. To convert this into a meta package, I could would then run the following:
+
+```{r metajdt-demo-1, eval = FALSE}
+metamakr::create_meta_package(name = "metajdt",
+                              imports = c("shinysurveys", "ghee"),
+                              dev = rep(FALSE, 2))
+```
+
+I included `dev = rep(FALSE, 2))` to indicate that these packages are published versions. If I were to use the development version of shinysurveys, for example, I would have used `dev = c(TRUE, FALSE)`, to positionally match the development status and the package import name. When run, the following messages are printed to the console and the DESCRIPTION is updated to include all imports.
+
+![](images/Screen%20Shot%202021-06-28%20at%209.45.56%20PM.png)
+
+    Package: metajdt
+    Title: What the Package Does (One Line, Title Case)
+    Version: 0.0.0.9000
+    Authors@R: 
+        person(given = "Jonathan",
+               family = "Trattner",
+               role = c("aut", "cre"),
+               email = "jdt@jdtrat.com",
+               comment = c(ORCID = "0000-0002-1097-7603"))
+    Description: What the package does (one paragraph).
+    License: MIT + file LICENSE
+    Encoding: UTF-8
+    Language: es
+    LazyData: true
+    Roxygen: list(markdown = TRUE)
+    RoxygenNote: 7.1.1.9000
+    Imports: 
+        cli,
+        crayon,
+        ghee,
+        rstudioapi,
+        shinysurveys,
+        utils
+
+The packages [cli](http://cli.r-lib.org/), [crayon](https://github.com/r-lib/crayon), [rstudioapi](https://rstudio.github.io/rstudioapi/), and utils, are needed in order to print the "Attaching packages" message to the command line. [`metajdt` is on GitHub](https://github.com/jdtrat/metajdt), and I encourage you to try the following yourself:
+
+```{r install-load-metajdt, eval = FALSE}
+
+if (!require(remotes)) install.packages("remotes")
+remotes::install_github("jdtrat/metajdt")
+library(metajdt)
+#> ── Attaching packages ──────────────────────────────────── metajdt 0.0.0.9000 ──
+#> ✓ shinysurveys 0.1.2     ✓ ghee         0.1.0
+```
+
+It's that simple! `library(metajdt)` is now a shortcut for both `library(shinysurveys)` and `library(ghee)`. Plus, it's easier to install.
+
+### Bells and Whistles
+
+The code generated by `create_meta_package()` is specific to the name argument.[^2] In this case, metajdt. So, if I wanted to list all the packages imported by metajdt, like `tidyverse::tidyverse_packages()`, I could call the following:
+
+[^2]: This is possible with the [whisker](https://github.com/edwindj/whisker) package!
+
+```{r metajdt_packages, eval = FALSE}
+metajdt::metajdt_packages()
+#> [1] "cli"          "crayon"       "ghee"         "rstudioapi"   "shinysurveys"
+#> [6] "utils"
+```
+
+As another example, if my package name were "jdtverse", I would call `jdtverse::jdtverse_packages()`.
+
+For those who wish to adapt their start up message, I include a helper function, `metajdt:::metajdt_detach()` for this package, which will remove all attached packages so you can customize the start up message in an interactive manner:[^3]
+
+[^3]: During development you would most likely call `devtools::load_all()` instead of library, but the principle is the same!
+
+```{r detach-demo, eval = FALSE}
+# First call, we see the startup message.
+library(metajdt)
+#> ── Attaching packages ──────────────────────────────────── metajdt 0.0.0.9000 ──
+#> ✓ shinysurveys 0.1.2     ✓ ghee         0.1.0
+
+# Second call, we see nothing since the packages are loaded.
+library(metajdt)
+
+# We can detach the packages as such and reload.
+metajdt:::metajdt_detach()
+
+# Yay! Start up message
+library(metajdt)
+#> ── Attaching packages ──────────────────────────────────── metajdt 0.0.0.9000 ──
+#> ✓ shinysurveys 0.1.2     ✓ ghee         0.1.0
+```
+
+## Limitations & Acknowledgements
+
+I'm really excited about metamakr as an easy-to-use development tool to improve how I share my code with colleagues, and I hope you'll find it useful as well! As of now, it does not generate code to warn users of namespace conflicts,[^4] though I may implement this feature in the future.
+
+[^4]: See [`tidyverse::tidyverse_conflicts()`](https://github.com/tidyverse/tidyverse/blob/master/R/conflicts.R).
+
+As previously mentioned, most of the code is directly adapted (or copied) from the tidyverse source code. I've learned a heck of a lot studying it, and am extremely grateful for all of the authors' open-source contributions. In metamakr's DESCRIPTION, I have added the tidyverse authors as a contributor and -- if you use metamakr in your own project -- encourage you to do the same:
+
+    person(given = "tidyverse authors",
+               role = "ctb",
+               comment = "Startup message code adapted from tidyverse package")
+
+# Conclusion
+
+In this post, I briefly illustrated how to use metamakr to create your own 'verse' of packages. Because the generated code is heavily commented, I did not walk-through how the code works. If you have any questions on it, however, I am happy to write a more detail-oriented article!
+
+For any questions or feedback, please leave a comment below! More of my work can be seen on [GitHub](https://github.com/jdtrat/). If you want to chat about anything (including neuroscience, \#rstats, piano, or my cat), DM me on [Twitter](https://twitter.com/jdtrat). Lastly, if you need help with an \#rstats or {shiny} project, I'm available for consulting -- just [send me an email](mailto:jdt@jdtrat.com)!
