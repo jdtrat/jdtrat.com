@@ -2,7 +2,9 @@
 author: Jonathan Trattner
 categories:
 - R
+- Shiny
 - packages
+- shinysurveys
 date: "2019-07-02"
 draft: false
 excerpt: shinysurveys provides easy-to-use, minimalistic code for creating and deploying surveys in R. It extends the shiny package and converts a table of questions into an interactive web-based application. Administering surveys with this package allows users to combine the computational tools of R with the interactivity of web applications. This synergy helps bridge the gap between data collection and data analysis.
