@@ -1,0 +1,181 @@
+---
+title: "Making a Multi-Paged shinysurvey"
+author: Jonathan Trattner
+excerpt: "In this post, I document a new feature of shinysurveys v0.2.0: multi-paged surveys. Using a question set built-in to shinysurveys, I illustrate how to convert a single paged survey to a multi-paged one. For examples, these can be run with the functions `demo_survey()` and `demo_survey_multipage()`."
+date: '2021-06-27'
+draft: false
+layout: single-sidebar
+categories: 
+  - R
+  - Shiny
+  - Packages
+  - shinysurveys
+output:
+  blogdown::html_page:
+    toc: true
+    number_sections: false
+    toc_depth: 2
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a>
+<ul>
+<li><a href="#one-page-survey">One Page Survey</a></li>
+<li><a href="#multiple-paged-survey">Multiple Paged Survey</a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>As of <a href="https://shinysurveys.jdtrat.com">shinysurveys</a> version 0.2.0, users can optionally split a survey over multiple pages. In this brief blog post, I’ll illustrate an example of this with the built-in data frame of questions from a recent study conducted by the <a href="https://dmds.lucymcgowan.com/">D’Agostino McGowan Data Science Lab</a>.</p>
+<p>In addition to <code>shinysurveys</code>, I will use the packages <a href="https://dplyr.tidyverse.org"><code>dplyr</code></a> and <a href="https://tidyr.tidyverse.org"><code>tidyr</code></a> in this example for easily manipulating the data frame.</p>
+<pre class="r"><code>library(shinysurveys)
+library(dplyr)
+library(tidyr)</code></pre>
+<div id="one-page-survey" class="section level2">
+<h2>One Page Survey</h2>
+<p><code>teaching_r_questions</code> is a data frame with eleven questions that follow the format of a shiny survey. The first ten rows look like this:<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
+<pre><code>## # A tibble: 54 x 7
+##    question    option   input_type input_id dependence dependence_value required
+##    &lt;chr&gt;       &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;            &lt;lgl&gt;   
+##  1 What&#39;s you… 25       numeric    age      &lt;NA&gt;       &lt;NA&gt;             TRUE    
+##  2 Which best… Female   mc         gender   &lt;NA&gt;       &lt;NA&gt;             TRUE    
+##  3 Which best… Male     mc         gender   &lt;NA&gt;       &lt;NA&gt;             TRUE    
+##  4 Which best… Prefer … mc         gender   &lt;NA&gt;       &lt;NA&gt;             TRUE    
+##  5 Which best… Prefer … mc         gender   &lt;NA&gt;       &lt;NA&gt;             TRUE    
+##  6 Which best… &lt;NA&gt;     text       self_de… gender     Prefer to self … FALSE   
+##  7 What is th… Did not… select     educati… &lt;NA&gt;       &lt;NA&gt;             FALSE   
+##  8 What is th… Some hi… select     educati… &lt;NA&gt;       &lt;NA&gt;             FALSE   
+##  9 What is th… High sc… select     educati… &lt;NA&gt;       &lt;NA&gt;             FALSE   
+## 10 What is th… Some co… select     educati… &lt;NA&gt;       &lt;NA&gt;             FALSE   
+## # … with 44 more rows</code></pre>
+<p>The function <a href="https://shinysurveys.jdtrat.com/reference/demo_survey.html"><code>demo_survey()</code></a> allows you to see what a shiny survey may look like using these questions. Internally, the following shiny app is defined:</p>
+<pre class="r"><code>library(shiny)
+library(shinysurveys)
+
+ui &lt;- fluidPage(
+    surveyOutput(df = teaching_r_questions, 
+                 survey_title = &quot;A survey title&quot;, 
+                 survey_description = &quot;A description that is longer than the title.&quot;, 
+                 theme = &quot;#63B8FF&quot;
+      )
+    )
+
+server &lt;- function(input, output, session) {
+  renderSurvey()
+}
+
+shinyApp(ui, server)</code></pre>
+</div>
+<div id="multiple-paged-survey" class="section level2">
+<h2>Multiple Paged Survey</h2>
+<p>Having run the single-paged example, I think the survey may be easier to complete if the questions are displayed over multiple pages. I’ll organize it as follows:</p>
+<p><strong>First Page:</strong> Questions about age, gender, and education level.</p>
+<p><strong>Second Page:</strong> Questions about language and reading.</p>
+<p><strong>Third Page:</strong> Questions about programming and data analysis.</p>
+<blockquote>
+<p>To create a shiny survey that spans multiple pages, the data frame of questions must be modified to include a ‘page’ column that specifies the location for each question.</p>
+</blockquote>
+<p>In our example, the survey has questions with dependencies (conditionally shown questions), so I want to make sure all the parent and children questions are on the same page. To do this, I’ll group the data frame by each question and nest the other columns for a simpler manipulation:</p>
+<pre class="r"><code>nested_questions &lt;- teaching_r_questions %&gt;% 
+  group_by(question) %&gt;% 
+  nest() %&gt;%
+  ungroup()
+
+nested_questions</code></pre>
+<pre><code>## # A tibble: 11 x 2
+##    question                                                       data          
+##    &lt;chr&gt;                                                          &lt;list&gt;        
+##  1 What&#39;s your age?                                               &lt;tibble [1 × …
+##  2 Which best describes your gender?                              &lt;tibble [5 × …
+##  3 What is the highest level of education you have attained?      &lt;tibble [6 × …
+##  4 What was your first language?                                  &lt;tibble [15 ×…
+##  5 In what language do you read most often?                       &lt;tibble [15 ×…
+##  6 Have you ever learned to program in R?                         &lt;tibble [2 × …
+##  7 If yes, how many years have you been using R?                  &lt;tibble [1 × …
+##  8 Have you ever learned a programming language (other than R)?   &lt;tibble [2 × …
+##  9 If yes, which language(s) and how many years have you been us… &lt;tibble [1 × …
+## 10 Have you ever completed a data analysis?                       &lt;tibble [2 × …
+## 11 If yes, approximately how many data analyses have you complet… &lt;tibble [4 × …</code></pre>
+<p>We can see that the first three rows should be on page 1, the fourth and fifth rows on page 2, and the remaining six rows on page 3. One easy way to add a column is with <code>dplyr::mutate()</code> like such:</p>
+<pre class="r"><code>multiQuestions &lt;- nested_questions %&gt;%
+  mutate(page = c(
+    rep(1, 3),
+    rep(2, 2),
+    rep(3, 6))
+  )
+
+multiQuestions</code></pre>
+<pre><code>## # A tibble: 11 x 3
+##    question                                                  data           page
+##    &lt;chr&gt;                                                     &lt;list&gt;        &lt;dbl&gt;
+##  1 What&#39;s your age?                                          &lt;tibble [1 ×…     1
+##  2 Which best describes your gender?                         &lt;tibble [5 ×…     1
+##  3 What is the highest level of education you have attained? &lt;tibble [6 ×…     1
+##  4 What was your first language?                             &lt;tibble [15 …     2
+##  5 In what language do you read most often?                  &lt;tibble [15 …     2
+##  6 Have you ever learned to program in R?                    &lt;tibble [2 ×…     3
+##  7 If yes, how many years have you been using R?             &lt;tibble [1 ×…     3
+##  8 Have you ever learned a programming language (other than… &lt;tibble [2 ×…     3
+##  9 If yes, which language(s) and how many years have you be… &lt;tibble [1 ×…     3
+## 10 Have you ever completed a data analysis?                  &lt;tibble [2 ×…     3
+## 11 If yes, approximately how many data analyses have you co… &lt;tibble [4 ×…     3</code></pre>
+<p>Our last step is to unnest the questions, i.e. to restructure data frame into the format accepted by shinysurveys:</p>
+<pre class="r"><code>multiQuestions &lt;- multiQuestions %&gt;%
+  unnest(cols = data)</code></pre>
+<p>And voila! Just like that, we have a data frame to specify a multi-paged shiny survey. To double check we organized it correctly, we can group the data by page and question as follows:</p>
+<pre class="r"><code>multiQuestions %&gt;% 
+  group_by(page, question) %&gt;% 
+  slice_head() %&gt;%
+  ungroup() %&gt;%
+  select(question, page)</code></pre>
+<pre><code>## # A tibble: 11 x 2
+##    question                                                                 page
+##    &lt;chr&gt;                                                                   &lt;dbl&gt;
+##  1 What is the highest level of education you have attained?                   1
+##  2 What&#39;s your age?                                                            1
+##  3 Which best describes your gender?                                           1
+##  4 In what language do you read most often?                                    2
+##  5 What was your first language?                                               2
+##  6 Have you ever completed a data analysis?                                    3
+##  7 Have you ever learned a programming language (other than R)?                3
+##  8 Have you ever learned to program in R?                                      3
+##  9 If yes, approximately how many data analyses have you completed?            3
+## 10 If yes, how many years have you been using R?                               3
+## 11 If yes, which language(s) and how many years have you been using each …     3</code></pre>
+<p>Looks good to me! We can use this data frame to create a multi-paged survey as follows:</p>
+<pre class="r"><code>library(shiny)
+library(shinysurveys)
+
+ui &lt;- fluidPage(
+    surveyOutput(df = multiQuestions, 
+                 survey_title = &quot;A survey title&quot;, 
+                 survey_description = &quot;A description that is longer than the title.&quot;, 
+                 theme = &quot;#63B8FF&quot;
+      )
+    )
+
+server &lt;- function(input, output, session) {
+  renderSurvey()
+}
+
+shinyApp(ui, server)</code></pre>
+<p>The above code is packaged within the function <a href="https://shinysurveys.jdtrat.com/reference/demo_survey_multipage.html"><code>demo_survey_multipage()</code></a>.</p>
+</div>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>In this post, I briefly illustrated how to convert a single paged shiny survey to a multi-paged one. You can see the examples for yourself with the functions <code>demo_survey()</code> and <code>demo_survey_multipage()</code> built into shinysurveys.</p>
+<p>For any questions or feedback, please leave a comment below! More of my work can be seen on <a href="https://github.com/jdtrat/">GitHub</a>. If you want to chat about anything (including neuroscience, #rstats, piano, or my cat), DM me on <a href="https://twitter.com/jdtrat">Twitter</a>. Lastly, if you need help with an #rstats or shiny project, I’m available for consulting – just <a href="mailto:jdt@jdtrat.com">send me an email</a>!</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>See <a href="https://shinysurveys.jdtrat.com/articles/surveying-shinysurveys.html#introduction">this vignette</a> for an overview of each column.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
