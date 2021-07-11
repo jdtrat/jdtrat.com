@@ -34,7 +34,12 @@ a solution, I developed a framework for custom inputs to allow users to
 include different input types that meet their use case. In the next
 section, I outline three examples of how to add custom input types.
 
-As of now, custom inputs are only supported in the development version of {shinysurveys}, which can be installed as follows:
+As of now, custom inputs are only supported in the development version
+of {shinysurveys}, which can be installed as follows:[^1]
+
+[^1]: Note: shinysurveys v0.2.0 was released on CRAN on July 11th, 2021.
+    You can install it and use the same features described here with
+    `install.packages("shinysurveys").`
 
 ```{r install-dev-version, message = FALSE, warning = FALSE, eval = FALSE}
 # install.packages("remotes")
