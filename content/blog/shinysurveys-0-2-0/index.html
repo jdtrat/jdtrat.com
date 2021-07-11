@@ -1,0 +1,321 @@
+---
+title: "shinysurveys v0.2.0"
+author: Jonathan Trattner
+excerpt: "Introducing shinysurveys v0.2.0, which has a lot of new (exciting!) features. Notably, support for custom input (question) types, multi-paged surveys, and automatic response aggregation. For a full list of changes and new features, check out the [release  notes](https://shinysurveys.jdtrat.com/news/index.html)."
+date: '2021-07-11'
+draft: false
+layout: single-sidebar
+categories: 
+  - R
+  - Shiny
+  - Packages
+  - shinysurveys
+output:
+  blogdown::html_page:
+    toc: true
+    number_sections: false
+    toc_depth: 2
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+<script src="{{< blogdown/postref >}}index_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index_files/lightable/lightable.css" rel="stylesheet" />
+
+<div id="TOC">
+<ul>
+<li><a href="#new-version-whos-this">New version, who’s this?</a>
+<ul>
+<li><a href="#custom-input-types">Custom Input Types</a></li>
+<li><a href="#multi-paged-surveys">Multi-Paged Surveys</a></li>
+<li><a href="#automatic-response-aggregation">Automatic Response Aggregation</a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+</div>
+
+<div id="new-version-whos-this" class="section level1">
+<h1>New version, who’s this?</h1>
+<p>I’m thrilled to the release of shinysurveys 0.2.0! shinysurveys provides easy-to-use, minimalistic code for creating and deploying surveys in R with <a href="https://shiny.rstudio.com/">shiny</a>.</p>
+<p>You can install and load the current version of shinysurveys from CRAN as follows:</p>
+<pre class="r"><code># Install released version from CRAN
+install.packages(&quot;shinysurveys&quot;)
+library(shinysurveys)</code></pre>
+<p>shinysurveys has some really great new features. Notably, support for custom input (question) types, multi-paged surveys, and automatic response aggregation. For a full list of changes and new features, check out the <a href="https://shinysurveys.jdtrat.com/news/index.html">release notes</a>.</p>
+<div id="custom-input-types" class="section level2">
+<h2>Custom Input Types</h2>
+<p>The original idea for {shinysurveys} was to provide a select set of well-supported input types that are commonly used with surveys. In response to additional input type requests, I developed a framework for survey designers to define their own input types to meet individual use cases.</p>
+<p>Consider the question “On a scale from 1-10, how much do you love sushi?”. An ideal input type would be {shiny}’s <code>sliderInput</code>. However, this is not natively supported by {shinysurveys} as the slider input requires multiple arguments, including a minimum, maximum, and starting value. To get around this, we can define a new input type using a new function <code>extendInputType()</code>. This function accepts two arguments. The first, <code>input_type</code>, is a string of the input type used in the questions data frame. The second is the input definition. Consider:</p>
+<pre class="r"><code># Register a slider input to {shinysurveys} with a custom minimum and maximum value.
+extendInputType(input_type = &quot;slider&quot;, {
+  shiny::sliderInput(
+    inputId = surveyID(),
+    label = surveyLabel(),
+    min = 1,
+    max = 10,
+    value = 5
+    ) 
+})</code></pre>
+<p>Note the inputId and label are set to <code>surveyID()</code> and <code>surveyLabel()</code>, respectively. These are necessary helper functions to ensure that survey features such as required questions function properly. As such, <strong>all extensions need <code>inputId = surveyID()</code> and <code>label = surveyLabel()</code>.</strong></p>
+<p>As in a typical shiny survey, we can define our question as follows:</p>
+<pre class="r"><code># Define a question as normal with the `input_type` set to &quot;slider&quot;, which is not natively supported by {shinysurveys}.
+
+slider_question &lt;- data.frame(
+  question = &quot;On a scale from 1-10, how much do you love sushi?&quot;,
+  option = NA,
+  input_type = &quot;slider&quot;,
+  input_id = &quot;sushi_scale&quot;,
+  dependence = NA,
+  dependence_value = NA,
+  required = TRUE
+  )</code></pre>
+<p>When running the full application, we see the following survey:</p>
+<p><img src="images/custom-slider-input.png" /></p>
+<p>For more thorough documentation on extending shinysurveys with custom inputs, please see my <a href="https://www.jdtrat.com/blog/extending-shinysurveys/">blog post</a> or the <a href="https://shinysurveys.jdtrat.com/articles/custom-input-extensions.html">vignette</a>.</p>
+</div>
+<div id="multi-paged-surveys" class="section level2">
+<h2>Multi-Paged Surveys</h2>
+<p>shinysurveys now supports surveys spanning multiple pages. To use, a ‘page’ column must be added to the data frame of questions supplied to <code>surveyOutput()</code> The column can either have numeric <code>(e.g. c(1, 1, 2, 3))</code> or character values (<code>c("intro", "intro", "middle", "final")</code>). Consider:</p>
+<p><strong>Single-Paged Question Data Frame:</strong></p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+question
+</th>
+<th style="text-align:left;">
+option
+</th>
+<th style="text-align:left;">
+input_type
+</th>
+<th style="text-align:left;">
+input_id
+</th>
+<th style="text-align:left;">
+dependence
+</th>
+<th style="text-align:left;">
+dependence_value
+</th>
+<th style="text-align:left;">
+required
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+What is your name?
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+text
+</td>
+<td style="text-align:left;">
+name
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+What is your favorite food?
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+text
+</td>
+<td style="text-align:left;">
+favorite_food
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Multi-Paged Question Data Frame:</strong></p>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+question
+</th>
+<th style="text-align:left;">
+option
+</th>
+<th style="text-align:left;">
+input_type
+</th>
+<th style="text-align:left;">
+input_id
+</th>
+<th style="text-align:left;">
+dependence
+</th>
+<th style="text-align:left;">
+dependence_value
+</th>
+<th style="text-align:left;">
+required
+</th>
+<th style="text-align:right;">
+page
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+What is your name?
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+text
+</td>
+<td style="text-align:left;">
+name
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+What is your favorite food?
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+text
+</td>
+<td style="text-align:left;">
+favorite_food
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+FALSE
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+</tbody>
+</table>
+<p>For more thorough documentation on creating a multi-paged survey, please see my <a href="https://www.jdtrat.com/blog/multi-paged-shinysurvey/">blog post</a>.</p>
+</div>
+<div id="automatic-response-aggregation" class="section level2">
+<h2>Automatic Response Aggregation</h2>
+<p>In large part, shinysurveys was developed to help bridge the gap between data collection ad analysis. To help survey designers more quickly gain insights of the results, I’ve developed a function <code>getSurveyData()</code> to easily aggregate survey responses in a common structure, inspired by tidy data, where each row is an observation (question) and each column is a variable.</p>
+<p>The ‘subject_id’ column can be used for identifying respondents. The ‘question_id’ and ‘question_type’ columns correspond to ‘input_id’ and ‘input_type’ from the original data frame of questions. The ‘response’ column is the participant’s answer. Consider the following example:</p>
+<pre class="r"><code># Load packages
+library(shiny)
+library(shinysurveys)
+
+# Define questions in the format of a shinysurvey
+survey_questions &lt;- data.frame(
+  question = c(&quot;What is your favorite food?&quot;,
+               &quot;What&#39;s your name?&quot;),
+  option = NA,
+  input_type = &quot;text&quot;,
+  input_id = c(&quot;favorite_food&quot;, &quot;name&quot;),
+  dependence = NA,
+  dependence_value = NA,
+  required = c(TRUE, FALSE)
+)
+
+# Define shiny UI
+ui &lt;- fluidPage(
+  surveyOutput(survey_questions,
+               survey_title = &quot;Hello, World!&quot;,
+               survey_description = &quot;A demo survey&quot;)
+)
+
+# Define shiny server
+server &lt;- function(input, output, session) {
+  renderSurvey()
+  
+  observeEvent(input$submit, {
+    response_data &lt;- getSurveyData(custom_id = &quot;test&quot;)
+    print(response_data)
+  })
+  
+}
+
+# Run the shiny application
+shinyApp(ui, server)</code></pre>
+<p>In the browser, the survey looks like this:</p>
+<p><img src="images/demo-survey-screenshot.png" />
+When I answer the survey and click submit, the following data frame is printed to the console, following the format described above.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">subject_id</th>
+<th align="center">question_id</th>
+<th align="center">question_type</th>
+<th align="center">response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">test</td>
+<td align="center">favorite_food</td>
+<td align="center">text</td>
+<td align="center">Sushi</td>
+</tr>
+<tr class="even">
+<td align="center">test</td>
+<td align="center">name</td>
+<td align="center">text</td>
+<td align="center">JT</td>
+</tr>
+</tbody>
+</table>
+<p>For more thorough documentation on aggregating survey responses, please see the <a href="https://shinysurveys.jdtrat.com/articles/get-survey-data.html">vignette</a>.</p>
+</div>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>I hope you’ll find these new features shinysurveys useful! If you have any feedback, I’d love for you to file an <a href="https://github.com/jdtrat/shinysurveys/issues">issue</a>. For more of my work, please check out my <a href="https://github.com/jdtrat/">GitHub</a>. If you want to chat about anything (including neuroscience, #rstats, piano, or my cat), DM me on <a href="https://twitter.com/jdtrat">Twitter</a>. Need help with an #rstats or {shiny} project? I’m available for consulting
+– just <a href="mailto:jdt@jdtrat.com">send me an email</a>!</p>
+</div>
+<div id="acknowledgements" class="section level1">
+<h1>Acknowledgements</h1>
+<p>Thanks to the following people for their feedback and contributions through comments and issues:</p>
+<p><a href="https://github.com/LucyMcGowan">@LucyMcGowan</a>, <a href="https://github.com/MayaGans">@MayaGans</a>, <a href="https://github.com/nstrayer">@nstrayer</a>, <a href="https://github.com/nklepeis">@nklepeis</a>, <a href="https://github.com/muschellij2">@muschellij2</a>, <a href="https://github.com/priyankagagneja">@priyankagagneja</a>, and <a href="https://github.com/miiichaellam">@miiichaellam</a>.</p>
+</div>
