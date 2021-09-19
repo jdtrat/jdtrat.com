@@ -3,9 +3,9 @@ author: Jonathan Trattner
 categories:
 - R
 - packages
-date: "2019-07-02"
+date: "2021-09-19"
 draft: false
-excerpt: [Tremendous](https://tremendous.com/) is a platform that "empowers companies to buy, track and manage digital and physical payments." This package provides a slightly opinionated R interface for the 'Tremendous' API with, dare I say, tremendously intuitive functions for sending digital rewards and incentives directly from R.
+excerpt: "[Tremendous](https://tremendous.com/) is a platform that 'empowers companies to buy, track and manage digital and physical payments.' This package provides a slightly opinionated R interface for the 'Tremendous' API with, dare I say, tremendously intuitive functions for sending digital rewards and incentives directly from R."
 featured: true
 layout: single
 links:
