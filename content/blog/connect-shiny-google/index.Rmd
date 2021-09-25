@@ -7,7 +7,7 @@ excerpt: |
   Disclaimer: I am **not** a security expert, and this method is likely not secure enough for sensitive data such as protected health information.
   
 date: '2021-09-25'
-draft: true
+draft: false
 layout: single-sidebar
 categories: 
   - R
