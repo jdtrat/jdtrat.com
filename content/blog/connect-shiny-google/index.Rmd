@@ -245,7 +245,6 @@ shinyApp(ui, server)
 In order to deploy your application, you can use [shinyapps.io](https://shinyapps.io), a platform by [RStudio](https://rstudio.com) for hosting shiny applications. For a walk-through guide on publishing your shiny app, please see the [official documentation](https://shiny.rstudio.com/articles/shinyapps.html) or [my post on getting started with shinyapps.io](https://www.jdtrat.com/blog/getting-started-shinyapps/). I do want to highlight that, when you are deploying your application, if you are using RStudio's interface, you should see a pop up like the following which includes your ".secrets" folder. This must be checked in order for your application to work as expected. For example:
 
 ![](images/shiny-publish-secrets-folder.png)
-
 If you want to complete the survey and see your (and other) responses, please see [live application here](https://jdtrat-apps.shinyapps.io/connect-shiny-google-app/) and the [Google Sheet here](https://docs.google.com/spreadsheets/d/1TF2MRzN04jmgiR9o5YSuL5KV8nTV2v4lSmZzNpPFNN4/edit?usp=sharing).
 
 ## Conclusion
