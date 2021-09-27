@@ -255,11 +255,11 @@ my_sheet %>%
 
 ```
 
-## Which approach should I use?
+# Which approach should I use?
 
 Short answer: whichever is best for you! I think there are benefits to storing data in the same worksheet and in different ones, and it's really context dependent. That is, think about which best meets your use case. If there isn't a clear benefit to one over another, I'm generally a fan of using different worksheets. I often work with behavioral data as part of neuroscience or psychology studies and find I like the compartmentalization of each person's data in a new worksheet. I may set the sheet name equal to their participant ID, for example. As needed, I can go back and easily combine all the data with the function defined above, `sheet_combine()`.
 
-## Conclusion
+# Conclusion
 
 To recap, I briefly outlined two approaches I use for storing data with Google Sheets using the `googlesheets4` package. I introduced a utility function for aggregating data across individual worksheets and provided an example for you to try yourself.
 
