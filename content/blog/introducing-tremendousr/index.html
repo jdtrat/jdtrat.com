@@ -1,0 +1,151 @@
+---
+title: "Introducing 'tremendousr'"
+subtitle: ""
+excerpt: "[Tremendous](https://www.tremendous.com/) is a platform that \"empowers companies to buy, track and manage digital and physical payments.\" This package provides a slightly-opinionated R interface for the 'Tremendous' API with, dare I say, *tremendously* intuitive functions for sending rewards and incentives directly from R."
+date: 2021-09-30
+author: "Jonathan Trattner"
+draft: false
+# layout options: single, single-sidebar
+layout: single
+categories:
+- R
+- Packages
+image:
+  caption: "Hex Sticker for 'tremendousr'"
+  focal_point: ''
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>I was recently asked to explore alternatives for <a href="https://www.mturk.com">Amazon’s Mechanical Turk</a> and <a href="https://www.prolific.co">Prolific</a> with the goal of recruiting people from targeted populations to participate in behavioral tasks. As a dedicated #rstats user, I’ve been developing these tasks using <a href="https://shiny.rstudio.com">shiny</a> and <a href="http://shinysurveys.jdtrat.com/">shinysurveys</a>. One challenge was how to compensate people for their time. That’s where <a href="https://www.tremendous.com/">Tremendous</a> comes in. Tremendous is a platform that “empowers companies to buy, track, and manage digital and physical payments.” They provide an API that allows you to send and manage rewards dynamically, which is exactly what I needed.</p>
+<p>There was not an API wrapper for R yet, so I wrote tremendousr to provide a (slightly-opinionated) interface for Tremendous’s API. In this post, I’ll briefly walk-through how to get started sending rewards. Much of the information is available in the <a href="https://tremendousr.jdtrat.com/index.html">README</a>, and I cover additional examples certain API endpoints, in the <a href="https://tremendousr.jdtrat.com/articles/tremendousr.html">“Getting Started” vignette</a>.</p>
+<blockquote>
+<p>A note on package conventions: All functions begin with the prefix <code>trem_</code>, followed by categories such as <code>client</code> or action verbs such as <code>get</code> or <code>post</code>. This allows you to take advantage of RStudio’s auto-completion feature and quickly accomplish your goals.</p>
+</blockquote>
+<div id="how-do-you-install-tremendousr" class="section level2">
+<h2>How do you Install ‘tremendousr’?</h2>
+<p>You can install tremendousr via CRAN or GitHub and load it as follows:</p>
+<pre class="r"><code># Install released version from CRAN
+install.packages(&quot;tremendousr&quot;)
+
+# Or, install the development version from GitHub
+remotes::install_github(&quot;jdtrat/tremendousr&quot;)
+
+# Load package
+library(tremendousr)</code></pre>
+</div>
+</div>
+<div id="sending-your-first-payment" class="section level1">
+<h1>Sending your First Payment</h1>
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>Tremendous provides two environments for their platform:</p>
+<ul>
+<li><p>‘Sandbox’ environment, a “free and fully-featured environment for application development and testing.”</p></li>
+<li><p>‘Production’ environment, where real payments can be sent.</p></li>
+</ul>
+<blockquote>
+<p>Tremendous API users typically develop their applications against the sandbox environment, and then switch their credentials to production when they are ready to go live.</p>
+</blockquote>
+<p>To begin, you must create a Tremendous account. For the sandbox environment, you can sign up or log-in <a href="https://app.testflight.tremendous.com/">here</a> and generate an API key by navigating to <strong>Team Settings &gt; Developers</strong> and clicking on <strong>Add API key</strong> on the top right. You can follow the official documentation <a href="https://developers.tremendous.com/reference/making-your-first-request#key--getting-an-api-key">here</a>.</p>
+<p>With an API key, you can create a Tremendous Client in R and begin interacting with Tremendous.</p>
+</div>
+<div id="create-a-tremendous-client" class="section level2">
+<h2>Create a Tremendous Client</h2>
+<p>In order to send a payment, or access other features of Tremendous, you must use a Tremendous Client, which you can create with the function <code>trem_client_new()</code>. This is a convenient way to bundle your authentication (API) credentials and ensure you are using the proper environment (sandbox or production) for your calls. Conveniently, Tremendous prefixes API keys for each environment to differentiate them. If you’re using the sandbox environment, your API key would begin with <code>TEST_</code>; the production environment key will begin with <code>PROD_</code>.</p>
+<pre class="r"><code>test_client &lt;- trem_client_new(api_key = &quot;TEST_YOUR-KEY-HERE&quot;,
+                               sandbox = TRUE)
+# Print Tremendous API Client
+test_client</code></pre>
+<pre class="r"><code>#&gt; &lt;tremendousClient&gt;
+#&gt;  API key: &lt;private&gt;
+#&gt;  API Environment: Sandbox</code></pre>
+</div>
+<div id="sending-a-reward" class="section level2">
+<h2>Sending a Reward</h2>
+<p>In Tremendous, rewards start out as <em>orders</em> which contain information about the recipient, reward amount and type, funding source, delivery method, and a payment description id (what they refer to as an ‘external id’). Orders can be fulfilled either immediately or upon approval by your Tremendous Account administrator. To turn on approvals, you can login to your Tremendous account and navigate to <strong>Team Settings &gt; Approvals</strong> and click <strong>Order Approvals: OFF</strong> to toggle it on.</p>
+<div class="figure">
+<img src="tremendousr-images/tremendousr_order-approvals.png" alt="" />
+<p class="caption">A screenshot from the Tremendous Web Portal showing the ‘Order Appovals’ setting.</p>
+</div>
+<p>In general, when working in the ‘Sandbox’ environment, I would not require order approvals. I think this helps you refine payment methods, reward options, etc. more quickly.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> To take my own advice, in this post, I’ll keep orders approval off. Either way, though, to create an order and have the reward send (immediately or upon approval), you should use the function <code>trem_send_reward()</code> as follows:</p>
+<pre class="r"><code>trem_send_reward(client = test_client,
+             name = &quot;first last&quot;,
+             email = &quot;email@website.com&quot;,
+             reward_amount = 10,
+             currency_code = &quot;USD&quot;,
+             delivery_method = &quot;EMAIL&quot;,
+             payment_description_id = &quot;payment-from-intro-to-tremendousr&quot;,
+             funding_source_id = &quot;your-funding-id-from-tremendous&quot;,
+             reward_types = &quot;Q24BD9EZ332JT&quot;, # ID for virtual visa gift card
+             parse = TRUE # Return a parsed API response
+             )</code></pre>
+<p>Under the hood, this function performs a POST request for creating an order using Tremendous.<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> For detailed documentation on each field, I encourage you to check out the function’s help documentation (<code>?trem_send_reward</code>) or the official <a href="https://developers.tremendous.com/reference/core-orders-create">Tremendous documentation</a>.</p>
+<p>In sending this to myself, I get an email with a link to a redeem a Visa gift card:</p>
+<div class="figure">
+<img src="tremendousr-images/redeem-visa-giftcard.png" alt="" />
+<p class="caption">Preview of what redeeming a Virtual Visa Gift Card looks like. A blue box with a title “Virtual prepaid card” followed by contact information fields and terms of service information.</p>
+</div>
+</div>
+</div>
+<div id="thoughts-tips-and-tricks" class="section level1">
+<h1>Thoughts, Tips, and Tricks</h1>
+<p>I have really enjoyed working with the Tremendous API and found it quite intuitive. As such, for many of the endpoints, I have opted (for now, at least) to not create wrapper functions since they will not save a lot, if any, time. For example, to list your reward history you would call:</p>
+<pre class="r"><code>trem_get(test_client, &quot;rewards&quot;)</code></pre>
+<p>To access a specific reward’s information, you would simply append the reward ID:</p>
+<pre class="r"><code>trem_get(test_client, &quot;rewards/REWARD_ID&quot;)</code></pre>
+<p>In a future release of tremendousr, perhaps I will wrap this in a utility function such as <code>trem_get_reward()</code>, but I think this is user-friendly and encourages checking the <a href="https://developers.tremendous.com/">API documentation</a> 🤓</p>
+<div id="setting-your-api-key" class="section level2">
+<h2>Setting your API key</h2>
+<p>It is best practice to <strong>never</strong> include your API key within your R script in the event you inadvertently share it. To help with this, I include a utility function, <code>trem_set_api_key()</code>, which can (and should) be used as follows.</p>
+<pre class="r"><code>trem_set_api_key(&quot;TEST_YOUR-KEY-HERE&quot;)
+#&gt; • You may wish to add your Tremendous Test API key to your &#39;.Renviron&#39; file:
+#&gt; TREMENDOUS_TEST_KEY=TEST_YOUR-KEY-HERE
+#&gt; [Copied to clipboard]
+#&gt; • To edit your &#39;.Renviron&#39; file:
+#&gt; - Check that usethis is installed.
+#&gt; - Call `usethis::edit_r_environ()`.
+#&gt; - Check that &#39;.Renviron&#39; ends with a new line.
+test_client &lt;- trem_client_new(api_key = NULL, # Accesses environmental variable
+                               sandbox = TRUE)</code></pre>
+</div>
+<div id="setting-a-funding-id" class="section level2">
+<h2>Setting a Funding ID</h2>
+<p>In the sandbox environment, from what I understand, there is only one funding source (with a $5,000 limit that resets daily). Using the <code>trem_get()</code> function, you can easily define a variable for using <code>trem_send_reward()</code> as follows:</p>
+<pre class="r"><code>funding_id &lt;- trem_get(test_client, &quot;funding_sources&quot;)$funding_sources$id</code></pre>
+</div>
+<div id="finding-payment-methods" class="section level2">
+<h2>Finding Payment Methods</h2>
+<p>Tremendous offers support for over 600 reward types, including Virtual Visa, Starbucks, and Amazon gift cards, as well as ACH transfers. When sending a reward, you can define as many reward types, using a character vector of the ID, which will allow them to choose what they prefer.</p>
+<p>I think the easiest way of finding reward types is by browsing their <a href="https://www.tremendous.com/catalog">online catalog</a>. Using the name, you can then access their IDs as shown below. For this example, I’ll get the IDs for ‘Best Buy’, ‘Virtual Visa’, and ‘Target’ gift cards, making sure the currency is US dollars. I’m going to use the package <a href="https://dplyr.tidyverse.org">dplyr</a> for easy data manipulation and to show how you can use the pipe<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> to pass the Tremendous API client around.</p>
+<pre class="r"><code>library(dplyr)
+library(magrittr)
+
+# Save the current product listing as &#39;prods&#39;
+prods &lt;- test_client %&gt;%
+  trem_get(&quot;products&quot;)
+
+# Access the &#39;products&#39; data frame of prods and filter it to desired reward types, assigning the IDs as &#39;reward_ids&#39;.
+reward_ids &lt;- prods$products %&gt;% 
+  # Filter so the name is either &quot;Virtual Visa&quot;, &quot;Target&quot;, or &quot;Best Buy&quot; AND the currency code is &quot;USD&quot;
+  filter(name %in% c(&quot;Virtual Visa&quot;, &quot;Target&quot;, &quot;Best Buy&quot;) &amp; currency_codes == &quot;USD&quot;) %&gt;% 
+  # Grab the IDs
+  pull(id)</code></pre>
+<p>I did not include the product data in the package because – from my understanding – the IDs, and available options, are subject to change.</p>
+</div>
+<div id="have-a-tremendous-day" class="section level2">
+<h2>Have a ✨Tremendous✨ Day!</h2>
+<p>Thanks for reading my blog post! I hope you find use for tremendousr (and, of course, Tremendous). If you have any feedback, I’d love for you to <a href="https://github.com/jdtrat/tremendousr/issues/new">file an issue</a>. For more of my work, check out my <a href="https://github.com/jdtrat">GitHub</a>! If you want to chat about anything (including neuroscience, #rstats, piano, or my kitten), DM me on <a href="https://twitter.com/jdtrat">Twitter</a>! Lastly, if you need help with an #rstats or shiny project, I’m available for consulting – just <a href="mailto:jdt@jdtrat.com">send me an email</a>!</p>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>When you are ready to send actual rewards within the ‘Production’ environment, you may wish to have this feature enabled, especially if you will be automating reward delivery as an extra layer of protection.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>The help documentation for <code>trem_post()</code> actually shows an example of sending a reward manually. I find this wrapper function easier to work with, though, than nested lists 😅<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+<li id="fn3"><p>From <a href="https://magrittr.tidyverse.org">magrittr</a><a href="#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
