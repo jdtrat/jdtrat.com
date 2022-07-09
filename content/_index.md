@@ -2,13 +2,13 @@
 action_label: Read More &rarr;
 action_link: /about
 action_type: text
-description: <b>Freelance Developer</b> and <b>\#rstats enthusiast</b>. Experienced with open-source software, automated data analysis, reinforcement learning, and the likes. <br></br> <b>Master's student</b> at Wake Forest School of Medicine studying the neurobiology of decision making. 
+description: <b>Data Scientist</b> experienced with open-source software, automating data collection and analysis, reinforcement learning, and the likes. <br></br> <b>Ph.D. student</b> at Wake Forest School of Medicine studying the neurobiology of decision making and subjective experience. 
 image_left: true
 images:
 - images/jdtrat_logo.png
 show_action_link: true
 show_social_links: true
-subtitle: Data Science ~ Computational Neuroscience ~ Cat Dad
+subtitle: Data Scientist ~ Neuroscientist ~ Cat Dad
 text_align_left: false
 title: Jonathan Trattner
 type: home
